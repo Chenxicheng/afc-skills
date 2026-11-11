@@ -8,7 +8,7 @@ describe('CLI test environment', () => {
     try {
       const result = runCli([]);
 
-      expect(stripLogo(result.stdout)).toContain('The open agent skills ecosystem');
+      expect(stripLogo(result.stdout)).toContain('Agent skills for aipro, Claude Code, and more');
       expect(result.exitCode).toBe(0);
     } finally {
       vi.unstubAllEnvs();
@@ -21,7 +21,7 @@ describe('CLI test environment', () => {
     try {
       const result = runCliWithInput([], '');
 
-      expect(stripLogo(result.stdout)).toContain('The open agent skills ecosystem');
+      expect(stripLogo(result.stdout)).toContain('Agent skills for aipro, Claude Code, and more');
       expect(result.exitCode).toBe(0);
     } finally {
       vi.unstubAllEnvs();

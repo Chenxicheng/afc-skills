@@ -1312,8 +1312,8 @@ describe('sync command', () => {
 
     it('advertises experimental_sync in banner', () => {
       const result = runCli([]);
-      expect(result.stdout).toContain('npx skills experimental_sync');
-      expect(result.stdout).not.toContain('npx skills sync');
+      expect(result.stdout).toContain('npx afc-skills experimental_sync');
+      expect(result.stdout).not.toContain('npx afc-skills sync');
     });
   });
 });
