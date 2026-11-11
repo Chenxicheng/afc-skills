@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'npm spec to test instead of packing this checkout (e.g. skills@latest)'
+        description: 'npm spec to test instead of packing this checkout (e.g. /path/to/afc-skills-1.0.0.tgz)'
         required: false
         type: string
 

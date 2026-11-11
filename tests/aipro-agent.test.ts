@@ -23,10 +23,9 @@ describe('aipro agent support', () => {
     expect(agents.aipro.name).toBe('aipro');
     expect(agents.aipro.skillsDir).toBe('.aipro/skills');
     expect(agents.aipro.globalSkillsDir).toBe(join(homedir(), '.aipro', 'skills'));
-    expect(getAgentBaseDir('aipro', false, '/tmp/project')).toBe('/tmp/project/.aipro/skills');
-    expect(getAgentBaseDir('aipro', true, '/tmp/project')).toBe(
-      join(homedir(), '.aipro', 'skills')
-    );
+    const project = join(tmpdir(), 'project');
+    expect(getAgentBaseDir('aipro', false, project)).toBe(join(project, '.aipro', 'skills'));
+    expect(getAgentBaseDir('aipro', true, project)).toBe(join(homedir(), '.aipro', 'skills'));
   });
 
   it('detects aipro in the selected project', async () => {

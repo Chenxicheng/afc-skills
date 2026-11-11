@@ -39,9 +39,9 @@ describe('packed package', () => {
   });
 
   it('exposes the programmatic API through the exports map', async () => {
-    // Resolve `skills` the way a consumer would: a script in the install prefix.
+    // Resolve `afc-skills` the way a consumer would: a script in the install prefix.
     const script = [
-      "const api = await import('skills');",
+      "const api = await import('afc-skills');",
       'console.log(JSON.stringify({',
       '  exports: Object.keys(api).sort(),',
       "  agent: api.getSupportedAgents().some((a) => a.id === 'claude-code'),",
@@ -62,7 +62,7 @@ describe('packed package', () => {
       inject('installDir'),
       'node_modules',
       '.bin',
-      process.platform === 'win32' ? 'skills.cmd' : 'skills'
+      process.platform === 'win32' ? 'afc-skills.cmd' : 'afc-skills'
     );
     const result = await exec(shim, ['--version'], { env: cleanEnv() });
     if (!process.env.SKILLS_E2E_PACKAGE) expect(result.stdout.trim()).toBe(repoPkg.version);
@@ -75,24 +75,24 @@ describe('packed package', () => {
       [
         '--input-type=module',
         '-e',
-        "import { fileURLToPath } from 'node:url'; console.log(fileURLToPath(import.meta.resolve('skills/bin/cli.mjs', import.meta.url)));",
+        "import { fileURLToPath } from 'node:url'; console.log(fileURLToPath(import.meta.resolve('afc-skills/bin/cli.mjs', import.meta.url)));",
       ],
       { cwd: inject('installDir'), env: cleanEnv() }
     );
     const result = await exec(process.execPath, [resolved.stdout.trim(), '--help'], {
       env: cleanEnv(),
     });
-    expect(result.output).toContain('Usage: skills <command> [options]');
+    expect(result.output).toContain('Usage: afc-skills <command> [options]');
   });
 
   it('prints help and the banner', async () => {
     const sandbox = await Sandbox.create('help');
     const help = await sandbox.skills(['--help']);
-    expect(help.output).toContain('Usage: skills <command> [options]');
+    expect(help.output).toContain('Usage: afc-skills <command> [options]');
     expect(help.output).toContain('add <package>');
 
     const banner = await sandbox.skills([]);
-    expect(banner.output).toContain('skills add');
+    expect(banner.output).toContain('afc-skills add');
   });
 
   it('lists nothing in a fresh project and home', async () => {

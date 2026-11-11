@@ -11,7 +11,7 @@ declare module 'vitest' {
     e2eRoot: string;
     /** Absolute path to the installed package's bin script (run with `node`). */
     skillsBin: string;
-    /** Directory the package was installed into (`<dir>/node_modules/skills`). */
+    /** Directory the package was installed into (`<dir>/node_modules/afc-skills`). */
     installDir: string;
     /** The packed tarball, or null when SKILLS_E2E_PACKAGE points at a registry spec. */
     tarball: string | null;
@@ -28,7 +28,7 @@ function sh(cmd: string, args: string[], cwd: string, env?: NodeJS.ProcessEnv): 
 }
 
 /**
- * Pack the repo (or take SKILLS_E2E_PACKAGE, e.g. `skills@latest` or a .tgz path),
+ * Pack the repo (or take SKILLS_E2E_PACKAGE, e.g. `/path/to/afc-skills-1.0.0.tgz` or a .tgz path),
  * then `npm install` it into an empty prefix with a fresh HOME and no inherited
  * npm config, which is the closest local stand-in for a user's machine.
  */
@@ -61,11 +61,11 @@ export default async function setup(project: TestProject) {
     cleanEnv({ HOME: npmHome, USERPROFILE: npmHome, npm_config_cache: npmCache })
   );
 
-  const pkgDir = join(installDir, 'node_modules', 'skills');
+  const pkgDir = join(installDir, 'node_modules', 'afc-skills');
   const pkg = JSON.parse(await readFile(join(pkgDir, 'package.json'), 'utf8')) as {
     bin: Record<string, string>;
   };
-  const skillsBin = join(pkgDir, pkg.bin.skills!);
+  const skillsBin = join(pkgDir, pkg.bin['afc-skills']!);
 
   project.provide('e2eRoot', root);
   project.provide('skillsBin', skillsBin);
