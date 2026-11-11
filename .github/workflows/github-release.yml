@@ -1,0 +1,109 @@
+name: GitHub Release
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/github-release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afc-skills-initial-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'Chenxicheng/afc-skills' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Verify initial release identity
+        run: node -e "const p=require('./package.json'); if(p.name!=='afc-skills'||p.version!=='1.0.0') process.exit(1)"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check
+      - run: pnpm build
+      - name: Test release functionality
+        run: pnpm exec vitest run src/cli.test.ts src/cli-args.test.ts src/add-prompt.test.ts src/init.test.ts src/list.test.ts src/test-utils.test.ts tests/aipro-agent.test.ts tests/agent-choice-order.test.ts tests/sync-agent-memory.test.ts tests/sync.test.ts
+      - name: Package and smoke-test built npm tarball (no npm publishing)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir release-assets
+          npm pack --pack-destination release-assets
+          git archive --format=zip --prefix=afc-skills/ -o release-assets/afc-skills-1.0.0-source.zip HEAD
+          PACKAGE="$PWD/release-assets/afc-skills-1.0.0.tgz"
+          SMOKE=$(mktemp -d)
+          cd "$SMOKE"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund "$PACKAGE"
+          test "$(npx --offline afc-skills --version)" = '1.0.0'
+          npx --offline afc-skills --help | grep -F 'Usage: afc-skills'
+          cd "$GITHUB_WORKSPACE/release-assets"
+          sha256sum *.tgz *.zip > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: afc-skills-1.0.0
+          path: release-assets/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: afc-skills-1.0.0
+          path: release-assets
+      - name: Create GitHub Release only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Never overwrite an existing release or tag. Re-runs stop safely.
+          gh api "repos/$GH_REPO/releases" --paginate --jq '.[].tag_name' > existing-releases.txt
+          if grep -Fxq v1.0.0 existing-releases.txt; then
+            echo 'Release v1.0.0 already exists; refusing to overwrite.' >&2
+            exit 1
+          fi
+          gh api "repos/$GH_REPO/tags" --paginate --jq '.[].name' > existing-tags.txt
+          if grep -Fxq v1.0.0 existing-tags.txt; then
+            echo 'Tag v1.0.0 already exists; refusing to overwrite.' >&2
+            exit 1
+          fi
+          cat > release-notes.md <<'NOTES'
+          Initial afc-skills release, based on vercel-labs/skills v1.8.1.
+
+          - Add aipro: project `.aipro/skills/`, global `~/.aipro/skills/`.
+          - Prioritize aipro and Claude Code in selectable agent lists.
+          - Use the afc-skills package, command and banner.
+          - Built, tested and packaged by GitHub Actions. Not published to npm.
+
+          Install the downloaded tarball in your project:
+          `npm install --save-dev /path/to/afc-skills-1.0.0.tgz`
+          Then run `npx --offline afc-skills`.
+          Requires Node.js >=22.20.0; initial dependency installation may require network access.
+
+          Release checks cover CLI, aipro, ordering, and sync functionality. Three upstream tests
+          (non-TTY cancellation, copy-mode update, deleted-skill restoration) fail in the local
+          validation environment and are not part of the focused release check.
+          NOTES
+          gh release create v1.0.0 release-assets/* --target "$TARGET_SHA" --title 'afc-skills v1.0.0' --notes-file release-notes.md --latest
