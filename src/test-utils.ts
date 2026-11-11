@@ -64,13 +64,26 @@ export function stripAnsi(str: string): string {
 export function stripLogo(str: string): string {
   return str
     .split('\n')
-    .filter((line) => !line.includes('███') && !line.includes('╔') && !line.includes('╚'))
+    .filter(
+      (line) =>
+        !line.includes('███') &&
+        !line.includes('╔') &&
+        !line.includes('╚') &&
+        !['╭────────────────╮', '│   afc-skills   │', '╰────────────────╯'].some((part) =>
+          line.includes(part)
+        )
+    )
     .join('\n')
     .replace(/^\n+/, '');
 }
 
 export function hasLogo(str: string): boolean {
-  return str.includes('███') || str.includes('╔') || str.includes('╚');
+  return (
+    str.includes('│   afc-skills   │') ||
+    str.includes('███') ||
+    str.includes('╔') ||
+    str.includes('╚')
+  );
 }
 
 export function createTestHomeEnvironment(home: string): Record<string, string> {

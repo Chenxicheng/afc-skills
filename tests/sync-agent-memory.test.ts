@@ -67,5 +67,11 @@ describe('sync agent selection', () => {
 
     expect(vi.mocked(searchMultiselect).mock.calls[0]![0].initialSelected).toEqual(['claude-code']);
     expect(await getLastSelectedAgents()).toEqual(['windsurf']);
+    expect(
+      vi
+        .mocked(searchMultiselect)
+        .mock.calls[0]![0].items.slice(0, 2)
+        .map((item) => item.value)
+    ).toEqual(['aipro', 'claude-code']);
   });
 });

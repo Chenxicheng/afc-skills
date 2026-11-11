@@ -1,5 +1,6 @@
 export type AgentType =
   | 'aider-desk'
+  | 'aipro'
   | 'amp'
   | 'antigravity'
   | 'antigravity-cli'

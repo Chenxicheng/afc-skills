@@ -1,3 +1,4 @@
+import { orderAgentChoices } from './agent-choice-order.ts';
 import * as p from '@clack/prompts';
 import { pc } from './color.ts';
 import { existsSync } from 'fs';
@@ -584,7 +585,7 @@ export async function promptForAgents(
 
   const selected = await searchMultiselect({
     message,
-    items: choices,
+    items: orderAgentChoices(choices),
     initialSelected: initialValues,
     required: true,
   });
@@ -671,7 +672,7 @@ async function selectAgentsInteractive(options: {
 
   const selected = await searchMultiselect({
     message: 'Which agents do you want to install to?',
-    items: otherChoices,
+    items: orderAgentChoices(otherChoices),
     initialSelected,
     lockedSection: universalSection,
   });

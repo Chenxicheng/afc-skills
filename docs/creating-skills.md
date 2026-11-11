@@ -64,6 +64,7 @@ discover `SKILL.md` files outside these container directories (e.g. under
 - `skills/.experimental/`
 - `skills/.system/`
 - `.aider-desk/skills/`
+- `.aipro/skills/`
 - `.agents/skills/`
 - `data/skills/`
 - `.autohand/skills/`

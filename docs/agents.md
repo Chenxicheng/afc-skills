@@ -8,6 +8,7 @@ Skills can be installed to any of these agents:
 | Agent | `--agent` | Project Path | Global Path |
 |-------|-----------|--------------|-------------|
 | AiderDesk | `aider-desk` | `.aider-desk/skills/` | `~/.aider-desk/skills/` |
+| aipro | `aipro` | `.aipro/skills/` | `~/.aipro/skills/` |
 | Amp, Replit, Universal | `amp`, `replit`, `universal` | `.agents/skills/` | `~/.config/agents/skills/` |
 | Antigravity, Antigravity CLI | `antigravity`, `antigravity-cli` | `.agents/skills/` | `~/.gemini/config/skills/` |
 | AstrBot | `astrbot` | `data/skills/` | `~/.astrbot/data/skills/` |

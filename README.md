@@ -1,3 +1,42 @@
+# afc-skills
+
+A fork of [vercel-labs/skills](https://github.com/vercel-labs/skills), with aipro support.
+
+## Use this fork
+
+Requires Node.js >=22.20.0. Build and package locally:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+npm pack
+# In the target project (use the actual absolute tarball path):
+npm install --save-dev /absolute/path/afc-skills-1.0.0.tgz
+npx --offline afc-skills
+# Alternatively: npm install -g /absolute/path/afc-skills-1.0.0.tgz
+# Then invoke afc-skills directly.
+```
+
+From your target project, install a local skill (a directory containing SKILL.md):
+
+```sh
+npx --offline afc-skills add /path/to/my-skill --agent aipro
+npx --offline afc-skills add /path/to/my-skill --agent aipro --global
+```
+
+Project skills are available under `.aipro/skills/`; global skills under `~/.aipro/skills/`.
+Use `--copy` for copies rather than the default symlinks.
+The selectable agent list prioritizes aipro, then Claude Code.
+
+The package and command are named `afc-skills`. The original subcommands and options
+remain supported. The `skills` and `add-skill` executable aliases are intentionally
+not installed, to avoid conflicts with the upstream package. In the upstream reference
+below, replace the `skills` command with `afc-skills` (and `npx skills` with
+`npx afc-skills` only after this package is published). A local build or tarball does
+not publish this package to npm.
+
+---
+
 # skills
 
 The CLI for the open agent skills ecosystem.
@@ -6,7 +45,7 @@ Agent skills are reusable instructions that teach coding agents how to perform t
 from reviewing code to working with a library. Discover skills at [skills.sh](https://skills.sh).
 
 <!-- agent-list:start -->
-Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [75 more](docs/agents.md).
+Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [76 more](docs/agents.md).
 <!-- agent-list:end -->
 
 <p>

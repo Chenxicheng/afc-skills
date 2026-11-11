@@ -27,6 +27,23 @@ describe('promptForAgents', () => {
     vi.clearAllMocks();
   });
 
+  it('shows aipro and Claude Code first without changing remembered selections', async () => {
+    vi.mocked(skillLock.getLastSelectedAgents).mockResolvedValue(['cursor']);
+    vi.mocked(searchMultiselectModule.searchMultiselect).mockResolvedValue(['cursor']);
+    const input = [...choices, { value: 'aipro' as const, label: 'aipro' }];
+    await promptForAgents('Select agents', input);
+    const options = vi.mocked(searchMultiselectModule.searchMultiselect).mock.calls[0]![0];
+    expect(options.items.map((item) => item.value)).toEqual([
+      'aipro',
+      'claude-code',
+      'opencode',
+      'cursor',
+      'grok',
+    ]);
+    expect(options.initialSelected).toEqual(['cursor']);
+    expect(input.at(-1)?.value).toBe('aipro');
+  });
+
   it('should use default agents (claude-code, opencode, codex, grok) when no history exists', async () => {
     vi.mocked(skillLock.getLastSelectedAgents).mockResolvedValue(undefined);
     vi.mocked(searchMultiselectModule.searchMultiselect).mockResolvedValue(['opencode']);

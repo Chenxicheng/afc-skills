@@ -32,14 +32,7 @@ function getVersion(): string {
 const VERSION = getVersion();
 initTelemetry(VERSION);
 
-const LOGO_LINES = [
-  '███████╗██╗  ██╗██╗██╗     ██╗     ███████╗',
-  '██╔════╝██║ ██╔╝██║██║     ██║     ██╔════╝',
-  '███████╗█████╔╝ ██║██║     ██║     ███████╗',
-  '╚════██║██╔═██╗ ██║██║     ██║     ╚════██║',
-  '███████║██║  ██╗██║███████╗███████╗███████║',
-  '╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝',
-];
+const LOGO_LINES = ['╭────────────────╮', '│   afc-skills   │', '╰────────────────╯'];
 
 function showLogo(): void {
   console.log();
@@ -51,39 +44,39 @@ function showLogo(): void {
 function showBanner(): void {
   showLogo();
   console.log();
-  console.log(`${DIM}The open agent skills ecosystem${RESET}`);
+  console.log(`${DIM}Agent skills for aipro, Claude Code, and more${RESET}`);
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills add ${DIM}<package>${RESET}        ${DIM}Add a new skill${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills add ${DIM}<package>${RESET}        ${DIM}Add a new skill${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills use ${DIM}<package>@<skill>${RESET} ${DIM}Use a skill without installing${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills use ${DIM}<package>@<skill>${RESET} ${DIM}Use a skill without installing${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills remove${RESET}               ${DIM}Remove installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills remove${RESET}               ${DIM}Remove installed skills${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills list${RESET}                 ${DIM}List installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills list${RESET}                 ${DIM}List installed skills${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills find ${DIM}[query]${RESET}         ${DIM}Search for skills${RESET}`
-  );
-  console.log();
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills update${RESET}               ${DIM}Update installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills find ${DIM}[query]${RESET}         ${DIM}Search for skills${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills experimental_install${RESET} ${DIM}Restore from skills-lock.json${RESET}`
-  );
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills init ${DIM}[name]${RESET}          ${DIM}Create a new skill${RESET}`
-  );
-  console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx skills experimental_sync${RESET}    ${DIM}Sync skills from node_modules${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills update${RESET}               ${DIM}Update installed skills${RESET}`
   );
   console.log();
-  console.log(`${DIM}try:${RESET} npx skills add vercel-labs/agent-skills`);
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills experimental_install${RESET} ${DIM}Restore from skills-lock.json${RESET}`
+  );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills init ${DIM}[name]${RESET}          ${DIM}Create a new skill${RESET}`
+  );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx afc-skills experimental_sync${RESET}    ${DIM}Sync skills from node_modules${RESET}`
+  );
+  console.log();
+  console.log(`${DIM}try:${RESET} npx afc-skills add vercel-labs/agent-skills`);
   console.log();
   console.log(`Discover more skills at ${TEXT}https://skills.sh/${RESET}`);
   console.log();
@@ -91,30 +84,30 @@ function showBanner(): void {
 
 function showHelp(): void {
   const examples: Array<[command: string, description?: string]> = [
-    ['skills add vercel-labs/agent-skills'],
-    ['skills use vercel-labs/agent-skills@vercel-optimize | claude'],
-    ['skills use vercel-labs/agent-skills --skill vercel-optimize --agent claude-code'],
-    ['skills add vercel-labs/agent-skills -g'],
-    ['skills add vercel-labs/agent-skills --agent claude-code cursor'],
-    ['skills add vercel-labs/agent-skills --skill pr-review commit'],
-    ['skills add vercel-labs/agent-skills --json -y', 'JSON output'],
-    ['skills remove', 'interactive remove'],
-    ['skills remove web-design', 'remove by name'],
-    ['skills rm --global frontend-design'],
-    ['skills list', 'list project skills'],
-    ['skills ls -g', 'list global skills'],
-    ['skills ls -a claude-code', 'filter by agent'],
-    ['skills ls --json', 'JSON output'],
-    ['skills find', 'interactive search'],
-    ['skills find typescript', 'search by keyword'],
-    ['skills find react --owner vercel', 'search within an owner'],
-    ['skills update'],
-    ['skills update my-skill', 'update a single skill'],
-    ['skills update -g', 'update global skills only'],
-    ['skills experimental_install', 'restore from skills-lock.json'],
-    ['skills init my-skill'],
-    ['skills experimental_sync', 'sync from node_modules (experimental)'],
-    ['skills experimental_sync -y', 'sync without prompts'],
+    ['afc-skills add vercel-labs/agent-skills'],
+    ['afc-skills use vercel-labs/agent-skills@vercel-optimize | claude'],
+    ['afc-skills use vercel-labs/agent-skills --skill vercel-optimize --agent claude-code'],
+    ['afc-skills add vercel-labs/agent-skills -g'],
+    ['afc-skills add vercel-labs/agent-skills --agent claude-code cursor'],
+    ['afc-skills add vercel-labs/agent-skills --skill pr-review commit'],
+    ['afc-skills add vercel-labs/agent-skills --json -y', 'JSON output'],
+    ['afc-skills remove', 'interactive remove'],
+    ['afc-skills remove web-design', 'remove by name'],
+    ['afc-skills rm --global frontend-design'],
+    ['afc-skills list', 'list project skills'],
+    ['afc-skills ls -g', 'list global skills'],
+    ['afc-skills ls -a claude-code', 'filter by agent'],
+    ['afc-skills ls --json', 'JSON output'],
+    ['afc-skills find', 'interactive search'],
+    ['afc-skills find typescript', 'search by keyword'],
+    ['afc-skills find react --owner vercel', 'search within an owner'],
+    ['afc-skills update'],
+    ['afc-skills update my-skill', 'update a single skill'],
+    ['afc-skills update -g', 'update global skills only'],
+    ['afc-skills experimental_install', 'restore from skills-lock.json'],
+    ['afc-skills init my-skill'],
+    ['afc-skills experimental_sync', 'sync from node_modules (experimental)'],
+    ['afc-skills experimental_sync -y', 'sync without prompts'],
   ];
   const exampleWidth = Math.max(
     ...examples.filter(([, description]) => description).map(([command]) => command.length)
@@ -128,7 +121,7 @@ function showHelp(): void {
     })
     .join('\n');
   console.log(`
-${BOLD}Usage:${RESET} skills <command> [options]
+${BOLD}Usage:${RESET} afc-skills <command> [options]
 
 ${BOLD}Manage Skills:${RESET}
   add <package>        Add a skill package (alias: a)
@@ -221,7 +214,7 @@ Discover more skills at ${TEXT}https://skills.sh/${RESET}
 
 function showRemoveHelp(): void {
   console.log(`
-${BOLD}Usage:${RESET} skills remove [skills...] [options]
+${BOLD}Usage:${RESET} afc-skills remove [skills...] [options]
 
 ${BOLD}Description:${RESET}
   Remove installed skills from agents. If no skill names are provided,
@@ -238,13 +231,13 @@ ${BOLD}Options:${RESET}
   --all              Remove every installed skill (-y implied). Do not combine with named skills.
 
 ${BOLD}Examples:${RESET}
-  ${DIM}$${RESET} skills remove                           ${DIM}# interactive selection${RESET}
-  ${DIM}$${RESET} skills remove my-skill                   ${DIM}# remove specific skill${RESET}
-  ${DIM}$${RESET} skills remove skill1 skill2 -y           ${DIM}# remove multiple skills${RESET}
-  ${DIM}$${RESET} skills remove --global my-skill          ${DIM}# remove from global scope${RESET}
-  ${DIM}$${RESET} skills rm --agent claude-code my-skill   ${DIM}# remove from specific agent${RESET}
-  ${DIM}$${RESET} skills remove --all                      ${DIM}# remove all skills${RESET}
-  ${DIM}$${RESET} skills remove --skill '*' -a cursor      ${DIM}# remove all skills from cursor${RESET}
+  ${DIM}$${RESET} afc-skills remove                           ${DIM}# interactive selection${RESET}
+  ${DIM}$${RESET} afc-skills remove my-skill                   ${DIM}# remove specific skill${RESET}
+  ${DIM}$${RESET} afc-skills remove skill1 skill2 -y           ${DIM}# remove multiple skills${RESET}
+  ${DIM}$${RESET} afc-skills remove --global my-skill          ${DIM}# remove from global scope${RESET}
+  ${DIM}$${RESET} afc-skills rm --agent claude-code my-skill   ${DIM}# remove from specific agent${RESET}
+  ${DIM}$${RESET} afc-skills remove --all                      ${DIM}# remove all skills${RESET}
+  ${DIM}$${RESET} afc-skills remove --skill '*' -a cursor      ${DIM}# remove all skills from cursor${RESET}
 
 Discover more skills at ${TEXT}https://skills.sh/${RESET}
 `);
@@ -303,10 +296,10 @@ Describe when this skill should be used.
   console.log();
   console.log(`${DIM}Publishing:${RESET}`);
   console.log(
-    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx skills add <owner>/<repo>${RESET}`
+    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx afc-skills add <owner>/<repo>${RESET}`
   );
   console.log(
-    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx skills add https://example.com/${displayPath}${RESET}`
+    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx afc-skills add https://example.com/${displayPath}${RESET}`
   );
   console.log();
   console.log(`Browse existing skills for inspiration at ${TEXT}https://skills.sh/${RESET}`);
@@ -332,7 +325,7 @@ async function main(): Promise<void> {
   const restArgs = args.slice(1);
 
   // Subcommand --help / -h must short-circuit before dispatch so that running
-  // e.g. `skills update --help` prints help instead of executing the update
+  // e.g. `afc-skills update --help` prints help instead of executing the update
   // flow. Without this pre-check, every subcommand handler that doesn't
   // inspect `--help` itself ends up running its side-effecting work.
   if (
@@ -374,7 +367,7 @@ async function main(): Promise<void> {
     case 'a':
     case 'add': {
       const { source: addSource, options: addOpts, errors } = parseAddOptions(restArgs);
-      // `skills install` with no source restores skills-lock.json, like `npm install`
+      // `afc-skills install` with no source restores skills-lock.json, like `npm install`
       if ((command === 'i' || command === 'install') && addSource.length === 0) {
         if (!inAgent) showLogo();
         await runInstallFromLock(restArgs);

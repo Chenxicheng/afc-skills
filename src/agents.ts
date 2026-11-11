@@ -92,6 +92,15 @@ export const agents: Record<AgentType, AgentConfig> = {
       return existsSync(join(home, '.aider-desk'));
     },
   },
+  aipro: {
+    name: 'aipro',
+    displayName: 'aipro',
+    skillsDir: '.aipro/skills',
+    globalSkillsDir: join(home, '.aipro/skills'),
+    detectInstalled: async (cwd = process.cwd()) => {
+      return existsSync(join(cwd, '.aipro')) || existsSync(join(home, '.aipro'));
+    },
+  },
   amp: {
     name: 'amp',
     displayName: 'Amp',
