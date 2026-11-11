@@ -50,7 +50,7 @@ jobs:
           npm init -y >/dev/null
           npm install --no-audit --no-fund "$PACKAGE"
           test "$(npx --offline afc-skills --version)" = '1.0.0'
-          npx --offline afc-skills --help | grep -F 'Usage: afc-skills'
+          NO_COLOR=1 npx --offline afc-skills --help | grep -F 'Usage: afc-skills'
           cd "$GITHUB_WORKSPACE/release-assets"
           sha256sum *.tgz *.zip > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
