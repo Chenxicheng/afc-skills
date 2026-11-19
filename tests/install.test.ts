@@ -31,13 +31,13 @@ describe('runInstallFromLock', () => {
     vi.mocked(add.installFromSource).mockResolvedValue({ installed: ['skill-a'], failed: [] });
   });
 
-  it('restores self-hosted GitLab project locks from sourceUrl', async () => {
+  it('restores enterprise GitHub project locks from sourceUrl', async () => {
     vi.mocked(localLock.readLocalLock).mockResolvedValue({
       version: 2,
       skills: {
         'skill-a': {
           source: 'acme/skills',
-          sourceUrl: 'https://gitlab.example.com/acme/skills.git',
+          sourceUrl: 'https://code.sdsdev.co.kr/acme/skills.git',
           sourceType: 'git',
           skillPath: 'skills/skill-a/SKILL.md',
           computedHash: 'hash',
@@ -49,7 +49,7 @@ describe('runInstallFromLock', () => {
 
     expect(add.installFromSource).toHaveBeenCalledWith(
       expect.objectContaining({
-        parsed: expect.objectContaining({ url: 'https://gitlab.example.com/acme/skills.git' }),
+        parsed: expect.objectContaining({ url: 'https://code.sdsdev.co.kr/acme/skills.git' }),
       }),
       { skills: ['skill-a'], agents: ['cursor'] }
     );

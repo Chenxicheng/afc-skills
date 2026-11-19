@@ -539,7 +539,7 @@ describe('universal target', () => {
 
 describe('download sources', () => {
   it('reports skill paths relative to the downloaded root', async () => {
-    const url = 'https://downloads.example.com/skills/direct-skill';
+    const url = 'https://code.sdsdev.co.kr/team/repo/raw/main/direct-skill/SKILL.md';
     const skillMd = '---\nname: direct-skill\ndescription: Direct skill\n---\n\n# Direct\n';
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
@@ -558,7 +558,7 @@ describe('download sources', () => {
   });
 
   it('locks a direct download by its URL', async () => {
-    const url = 'https://downloads.example.com/skills/locked-skill';
+    const url = 'https://code.sdsdev.co.kr/team/repo/raw/main/locked-skill/SKILL.md';
     const skillMd = '---\nname: locked-skill\ndescription: Locked skill\n---\n';
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Sandbox, entries, readSkill } from './sandbox.ts';
+import { Sandbox, entries, readSkill } from '../sandbox.ts';
 
 // vercel-labs is on the blob allowlist: skills come from skills.sh snapshots
 // (GitHub Trees API + /api/download) instead of a git clone.

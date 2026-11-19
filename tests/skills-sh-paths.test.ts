@@ -2,7 +2,7 @@
  * Tests for the `paths` field of skills.sh.json, which lets a repo declare
  * extra skill container directories outside the hardcoded priority dirs.
  *
- * See: https://github.com/vercel-labs/skills/issues/2582
+ * See: https://code.sdsdev.co.kr/vercel-labs/skills/issues/2582
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -214,45 +214,10 @@ describe('tryBlobInstall — skills.sh.json paths', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('reads skills.sh.json from the tree and discovers declared paths', async () => {
-    const tree = makeTree([
-      'skills.sh.json',
-      'skills/standard/SKILL.md',
-      'tools/skills/opt-in/SKILL.md',
-    ]);
-    // Snapshots must match the tree's Git blob SHAs to stay on the fast path.
-    for (const entry of tree.tree) {
-      if (!entry.path.endsWith('/SKILL.md')) continue;
-      const contents = skillMd(entry.path.split('/').at(-2)!);
-      entry.sha = createHash('sha1')
-        .update(`blob ${Buffer.byteLength(contents)}\0${contents}`)
-        .digest('hex');
-    }
-
-    fetchMock.mockImplementation(async (input: string | URL) => {
-      const url = String(input);
-      if (url.includes('/git/trees/')) {
-        return Response.json({ sha: tree.sha, tree: tree.tree });
-      }
-      if (url.endsWith('/skills.sh.json')) {
-        return new Response(JSON.stringify({ paths: ['./tools/skills'] }));
-      }
-      if (url.endsWith('/skills/standard/SKILL.md')) return new Response(skillMd('standard'));
-      if (url.endsWith('/tools/skills/opt-in/SKILL.md')) return new Response(skillMd('opt-in'));
-      const slug = url.split('/').at(-1)!;
-      return Response.json({
-        hash: `hash-${slug}`,
-        files: [{ path: 'SKILL.md', contents: skillMd(slug) }],
-      });
-    });
-
+  it('does not request public trees or config for a disabled snapshot path', async () => {
     const result = await tryBlobInstall('sveltejs/ai-tools');
-
-    expect(result).not.toBeNull();
-    expect(result!.skills.map((s) => s.repoPath).sort()).toEqual([
-      'skills/standard/SKILL.md',
-      'tools/skills/opt-in/SKILL.md',
-    ]);
+    expect(result).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('does not fetch skills.sh.json when the tree does not contain it', async () => {

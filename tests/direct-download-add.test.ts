@@ -70,7 +70,7 @@ import * as p from '@clack/prompts';
 const DISCOVERY_SCHEMA_V2 = 'https://schemas.agentskills.io/discovery/0.2.0/schema.json';
 
 function mockLegacyPack({ internal = false } = {}) {
-  const installUrl = 'https://registry.example.com/p/example-pack';
+  const installUrl = 'https://code.sdsdev.co.kr/example-pack';
   const baseUrl = `${installUrl}/.well-known/agent-skills`;
   const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
     const href = String(url);
@@ -156,30 +156,14 @@ describe('direct download add', () => {
     await rm(project, { recursive: true, force: true });
   });
 
-  it('installs a signed direct URL without persisting it for updates', async () => {
-    const directUrl = 'https://downloads.example.com/artifacts/direct-skill?x-amz-signature=secret';
-    const skillMd = '---\nname: direct-skill\ndescription: Direct skill\n---\n\n# Direct skill\n';
-
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
-      if (String(url) === directUrl) {
-        return new Response(skillMd, {
-          status: 200,
-          headers: { 'content-length': String(Buffer.byteLength(skillMd)) },
-        });
-      }
-      return new Response('not found', { status: 404 });
-    });
-
-    await runAdd([directUrl], {
-      yes: true,
-      agent: ['codex'],
-      global: false,
-      copy: true,
-    });
-
-    await expect(
-      readFile(join(project, '.agents', 'skills', 'direct-skill', 'SKILL.md'), 'utf-8')
-    ).resolves.toContain('# Direct skill');
+  it('rejects signed direct URLs before downloading or recording credentials', async () => {
+    const directUrl = 'https://code.sdsdev.co.kr/team/repo/raw/main/SKILL.md?signature=secret';
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    await expect(runAdd([directUrl], { yes: true, agent: ['codex'], copy: true })).rejects.toThrow(
+      'process.exit called'
+    );
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(fetchSpy).not.toHaveBeenCalled();
     expect(existsSync(join(project, 'skills-lock.json'))).toBe(false);
   });
 
@@ -293,9 +277,9 @@ describe('direct download add', () => {
   });
 
   it('reports the canonical discovery url separately from its archive artifact', async () => {
-    const installUrl = 'https://registry.example.com/publishers/acme/skills/archive-skill';
+    const installUrl = 'https://code.sdsdev.co.kr/archive-skill';
     const indexUrl = `${installUrl}/.well-known/agent-skills/index.json`;
-    const artifactUrl = 'https://cdn.example.net/artifacts/archive-skill.tar.gz?version=1.2.5';
+    const artifactUrl = 'https://code.sdsdev.co.kr/artifacts/archive-skill.tar.gz';
     const skillMd =
       '---\nname: archive-skill\ndescription: Archive skill\n---\n\n# Archive skill\n';
     const archive = createTarGz({ 'SKILL.md': skillMd });
@@ -336,7 +320,7 @@ describe('direct download add', () => {
     expect(track).toHaveBeenCalledWith(
       expect.objectContaining({
         event: 'install',
-        source: 'registry.example.com',
+        source: 'code.sdsdev.co.kr',
         installUrl,
         skillFiles: JSON.stringify({ 'archive-skill': artifactUrl }),
         sourceType: 'well-known',
@@ -345,8 +329,8 @@ describe('direct download add', () => {
   });
 
   describe('a well-known skill whose lock cannot be written', () => {
-    const installUrl = 'https://registry.example.com/skills/locked-skill';
-    const artifactUrl = 'https://cdn.example.net/locked-skill.tar.gz';
+    const installUrl = 'https://code.sdsdev.co.kr/locked-skill';
+    const artifactUrl = 'https://code.sdsdev.co.kr/locked-skill.tar.gz';
     let readOnlyLock: string;
 
     beforeEach(() => {

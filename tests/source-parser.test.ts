@@ -15,45 +15,45 @@ const isWindows = platform() === 'win32';
 describe('parseSource', () => {
   describe('GitHub URL tests', () => {
     it('GitHub URL - basic repo', () => {
-      const result = parseSource('https://github.com/owner/repo');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBeUndefined();
       expect(result.subpath).toBeUndefined();
     });
 
     it('GitHub URL - with .git suffix', () => {
-      const result = parseSource('https://github.com/owner/repo.git');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
     });
 
     it('GitHub URL - with .git suffix and #branch', () => {
-      const result = parseSource('https://github.com/owner/repo.git#feature/install');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo.git#feature/install');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('feature/install');
     });
 
     it('GitHub blob URL anchor is not treated as a ref', () => {
-      const result = parseSource('https://github.com/owner/repo/blob/main/README.md#L10');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo/blob/main/README.md#L10');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBeUndefined();
     });
 
     it('GitHub URL - tree with branch only', () => {
-      const result = parseSource('https://github.com/owner/repo/tree/feature-branch');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo/tree/feature-branch');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('feature-branch');
       expect(result.subpath).toBeUndefined();
     });
 
     it('GitHub URL - tree with branch and path', () => {
-      const result = parseSource('https://github.com/owner/repo/tree/main/skills/my-skill');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo/tree/main/skills/my-skill');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('main');
       expect(result.subpath).toBe('skills/my-skill');
     });
@@ -62,316 +62,223 @@ describe('parseSource', () => {
     // The parser treats the first segment as branch and rest as path.
     // This matches GitHub's URL structure behavior.
     it('GitHub URL - tree with slash in path (ambiguous branch)', () => {
-      const result = parseSource('https://github.com/owner/repo/tree/feature/my-feature');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo/tree/feature/my-feature');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('feature');
       expect(result.subpath).toBe('my-feature');
     });
   });
 
   describe('GitLab URL tests', () => {
-    it('GitLab URL - basic repo', () => {
-      const result = parseSource('https://gitlab.com/owner/repo');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/owner/repo.git');
-      expect(result.ref).toBeUndefined();
+    it('intranet rejects: GitLab URL - basic repo', () => {
+      expect(() => parseSource('https://gitlab.com/owner/repo')).toThrow(/intranet-only/);
     });
 
-    it('GitLab URL - tree with branch only', () => {
-      const result = parseSource('https://gitlab.com/owner/repo/-/tree/develop');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/owner/repo.git');
-      expect(result.ref).toBe('develop');
-      expect(result.subpath).toBeUndefined();
-    });
-
-    it('GitLab URL - tree with branch and path', () => {
-      const result = parseSource('https://gitlab.com/owner/repo/-/tree/main/src/skills');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/owner/repo.git');
-      expect(result.ref).toBe('main');
-      expect(result.subpath).toBe('src/skills');
-    });
-
-    it('GitLab URL - with .git suffix', () => {
-      const result = parseSource('https://gitlab.com/owner/repo.git');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/owner/repo.git');
-    });
-
-    it('GitLab URL - subgroup (2 levels)', () => {
-      const result = parseSource('https://gitlab.com/group/subgroup/repo');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/group/subgroup/repo.git');
-      expect(result.ref).toBeUndefined();
-    });
-
-    it('GitLab URL - subgroup (3 levels)', () => {
-      const result = parseSource('https://gitlab.com/coresofthq/ai/agent-skills');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/coresofthq/ai/agent-skills.git');
-      expect(result.ref).toBeUndefined();
-    });
-
-    it('GitLab URL - deep subgroup with .git suffix', () => {
-      const result = parseSource('https://gitlab.com/org/team/project/repo.git');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/org/team/project/repo.git');
-    });
-
-    it('GitLab URL - subgroup with tree/branch', () => {
-      const result = parseSource('https://gitlab.com/group/subgroup/repo/-/tree/main');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/group/subgroup/repo.git');
-      expect(result.ref).toBe('main');
-      expect(result.subpath).toBeUndefined();
-    });
-
-    it('GitLab URL - subgroup with tree/branch/path', () => {
-      const result = parseSource(
-        'https://gitlab.com/group/subgroup/repo/-/tree/main/path/to/skill'
+    it('intranet rejects: GitLab URL - tree with branch only', () => {
+      expect(() => parseSource('https://gitlab.com/owner/repo/-/tree/develop')).toThrow(
+        /intranet-only/
       );
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/group/subgroup/repo.git');
-      expect(result.ref).toBe('main');
-      expect(result.subpath).toBe('path/to/skill');
     });
 
-    it('GitLab URL - trailing slash', () => {
-      const result = parseSource('https://gitlab.com/group/subgroup/repo/');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/group/subgroup/repo.git');
+    it('intranet rejects: GitLab URL - tree with branch and path', () => {
+      expect(() => parseSource('https://gitlab.com/owner/repo/-/tree/main/src/skills')).toThrow(
+        /intranet-only/
+      );
+    });
+
+    it('intranet rejects: GitLab URL - with .git suffix', () => {
+      expect(() => parseSource('https://gitlab.com/owner/repo.git')).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: GitLab URL - subgroup (2 levels)', () => {
+      expect(() => parseSource('https://gitlab.com/group/subgroup/repo')).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: GitLab URL - subgroup (3 levels)', () => {
+      expect(() => parseSource('https://gitlab.com/coresofthq/ai/agent-skills')).toThrow(
+        /intranet-only/
+      );
+    });
+
+    it('intranet rejects: GitLab URL - deep subgroup with .git suffix', () => {
+      expect(() => parseSource('https://gitlab.com/org/team/project/repo.git')).toThrow(
+        /intranet-only/
+      );
+    });
+
+    it('intranet rejects: GitLab URL - subgroup with tree/branch', () => {
+      expect(() => parseSource('https://gitlab.com/group/subgroup/repo/-/tree/main')).toThrow(
+        /intranet-only/
+      );
+    });
+
+    it('intranet rejects: GitLab URL - subgroup with tree/branch/path', () => {
+      expect(() =>
+        parseSource('https://gitlab.com/group/subgroup/repo/-/tree/main/path/to/skill')
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: GitLab URL - trailing slash', () => {
+      expect(() => parseSource('https://gitlab.com/group/subgroup/repo/')).toThrow(/intranet-only/);
     });
   });
 
   describe('Azure Repos URL tests', () => {
-    it('Azure DevOps Services clone URL is git, not well-known', () => {
-      const result = parseSource('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills');
-      expect(result.ref).toBeUndefined();
-      expect(result.subpath).toBeUndefined();
-    });
-
-    it('Azure DevOps Services URL with .git suffix', () => {
-      const result = parseSource('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills.git');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills');
-    });
-
-    it('Azure DevOps Services web URL with path and branch query', () => {
-      const result = parseSource(
-        'https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills?path=/skills/web-design&version=GBmain'
-      );
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills');
-      expect(result.ref).toBe('main');
-      expect(result.subpath).toBe('skills/web-design');
-    });
-
-    it('visualstudio.com clone URL', () => {
-      const result = parseSource('https://fabrikam.visualstudio.com/FabrikamFiber/_git/skills');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://fabrikam.visualstudio.com/FabrikamFiber/_git/skills');
-    });
-
-    it('Azure DevOps Server collection/project/_git/repo', () => {
-      const result = parseSource('https://ado.example.com/DefaultCollection/MyProject/_git/skills');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://ado.example.com/DefaultCollection/MyProject/_git/skills');
-    });
-
-    it('Azure DevOps Server /tfs/ virtual directory', () => {
-      const result = parseSource(
-        'https://ado.example.com/tfs/DefaultCollection/MyProject/_git/skills'
-      );
-      expect(result.type).toBe('git');
-      expect(result.url).toBe(
-        'https://ado.example.com/tfs/DefaultCollection/MyProject/_git/skills'
+    it('intranet rejects: Azure DevOps Services clone URL is git, not well-known', () => {
+      expect(() => parseSource('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills')).toThrow(
+        /intranet-only/
       );
     });
 
-    it('encoded spaces in organization and project', () => {
-      const result = parseSource('https://dev.azure.com/My%20Org/My%20Project/_git/agent-skills');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://dev.azure.com/My%20Org/My%20Project/_git/agent-skills');
+    it('intranet rejects: Azure DevOps Services URL with .git suffix', () => {
+      expect(() =>
+        parseSource('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills.git')
+      ).toThrow(/intranet-only/);
     });
 
-    it('version=GT is a tag ref; version=GC is not a cloneable ref', () => {
-      expect(
-        parseSource('https://dev.azure.com/fabrikam/Fiber/_git/skills?version=GTv1.2.0').ref
-      ).toBe('v1.2.0');
-      expect(
+    it('intranet rejects: Azure DevOps Services web URL with path and branch query', () => {
+      expect(() =>
+        parseSource(
+          'https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills?path=/skills/web-design&version=GBmain'
+        )
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: visualstudio.com clone URL', () => {
+      expect(() =>
+        parseSource('https://fabrikam.visualstudio.com/FabrikamFiber/_git/skills')
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: Azure DevOps Server collection/project/_git/repo', () => {
+      expect(() =>
+        parseSource('https://ado.example.com/DefaultCollection/MyProject/_git/skills')
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: Azure DevOps Server /tfs/ virtual directory', () => {
+      expect(() =>
+        parseSource('https://ado.example.com/tfs/DefaultCollection/MyProject/_git/skills')
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: encoded spaces in organization and project', () => {
+      expect(() =>
+        parseSource('https://dev.azure.com/My%20Org/My%20Project/_git/agent-skills')
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: version=GT is a tag ref; version=GC is not a cloneable ref', () => {
+      expect(() =>
+        parseSource('https://dev.azure.com/fabrikam/Fiber/_git/skills?version=GTv1.2.0')
+      ).toThrow(/intranet-only/);
+      expect(() =>
         parseSource(
           'https://dev.azure.com/fabrikam/Fiber/_git/skills?version=GC2c732a035bae9fb21e7823d37b2b9553e272f0c6'
-        ).ref
-      ).toBeUndefined();
+        )
+      ).toThrow(/intranet-only/);
     });
 
-    it('#fragment is a git ref on Azure Repos URLs', () => {
-      const result = parseSource(
-        'https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills#release-2026'
+    it('intranet rejects: #fragment is a git ref on Azure Repos URLs', () => {
+      expect(() =>
+        parseSource('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills#release-2026')
+      ).toThrow(/intranet-only/);
+    });
+
+    it('intranet rejects: trailing slash after repo name', () => {
+      expect(() => parseSource('https://dev.azure.com/fabrikam/Fiber/_git/skills/')).toThrow(
+        /intranet-only/
       );
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://dev.azure.com/fabrikam/FabrikamFiber/_git/skills');
-      expect(result.ref).toBe('release-2026');
-    });
-
-    it('trailing slash after repo name', () => {
-      const result = parseSource('https://dev.azure.com/fabrikam/Fiber/_git/skills/');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://dev.azure.com/fabrikam/Fiber/_git/skills');
     });
   });
 
-  describe('Generic URL tests', () => {
-    it('generic HTTP URL is parsed as well-known with direct download fallback', () => {
-      const result = parseSource('https://internal.example.com/download?id=123');
-      expect(result.type).toBe('well-known');
-      expect(result.url).toBe('https://internal.example.com/download?id=123');
-    });
-
+  describe('corporate host and denied providers', () => {
     it.each([
       'https://raw.githubusercontent.com/acme/skills/main/SKILL.md',
       'https://github.com/acme/skills/releases/download/v1/skills.tgz',
-      'https://github.com/acme/skills/archive/refs/heads/main.zip',
       'https://gitlab.com/acme/skills/-/archive/main/skills-main.tar.gz',
-    ])('parses hosted artifact URL as a direct download: %s', (url) => {
-      const result = parseSource(url);
-      expect(result.type).toBe('download');
-      expect(result.url).toBe(url);
+      'https://gh-proxy.org/github.com/giikin/skills',
+      'https://gh-proxy.org/https://github.com/giikin/skills/',
+      'https://gh-proxy.org/github.com/owner/repo/tree/main/skills/my-skill',
+      'https://gh-proxy.org/github.com/owner/repo#v1.0.0@my-skill',
+      'https://mirror.example.com:8443/gitlab.com/group/sub/repo.git',
+      'https://code.sdsdev.co.kr.example.com/owner/repo',
+      'https://example.com/?next=code.sdsdev.co.kr/owner/repo',
+      'https://gh-proxy.org/https://github.com/owner/repo/archive/main.zip',
+      'https://www.code.sdsdev.co.kr/owner/repo',
+      'https://code.sdsdev.co.kr/owner/repo?tab=readme-ov-file',
+      'https://notgitlab.com/group/repo',
+    ])('rejects external providers, proxy URLs and query parameters: %s', (url) => {
+      expect(() => parseSource(url)).toThrow(/intranet-only/);
     });
-
-    // #2079: a proxy or mirror host must never be rewritten to github.com/gitlab.com.
     it.each([
-      [
-        'https://gh-proxy.org/github.com/giikin/skills',
-        { type: 'git', url: 'https://gh-proxy.org/github.com/giikin/skills.git' },
-      ],
-      [
-        'https://gh-proxy.org/github.com/giikin/skills.git',
-        { type: 'git', url: 'https://gh-proxy.org/github.com/giikin/skills.git' },
-      ],
-      [
-        'https://gh-proxy.org/https://github.com/giikin/skills/',
-        { type: 'git', url: 'https://gh-proxy.org/https://github.com/giikin/skills.git' },
-      ],
-      [
-        'https://gh-proxy.org/github.com/owner/repo/tree/main/skills/my-skill',
-        {
+      'https://code.sdsdev.co.kr/acme/skills/releases/download/v1/skills.tgz',
+      'https://code.sdsdev.co.kr/acme/skills/archive/refs/heads/main.zip',
+    ])('preserves corporate artifact URLs: %s', (url) => {
+      expect(parseSource(url)).toEqual({ type: 'download', url });
+    });
+    it.each(['https://CODE.SDSDEV.CO.KR/owner/repo', 'https://code.sdsdev.co.kr/owner/repo.git/'])(
+      'normalizes corporate HTTPS host and .git suffix: %s',
+      (input) => {
+        expect(parseSource(input)).toEqual({
           type: 'git',
-          url: 'https://gh-proxy.org/github.com/owner/repo.git',
-          ref: 'main',
-          subpath: 'skills/my-skill',
-        },
-      ],
-      [
-        'https://gh-proxy.org/github.com/owner/repo#v1.0.0@my-skill',
-        {
-          type: 'git',
-          url: 'https://gh-proxy.org/github.com/owner/repo.git',
-          ref: 'v1.0.0',
-          skillFilter: 'my-skill',
-        },
-      ],
-      [
-        'https://mirror.example.com:8443/gitlab.com/group/sub/repo.git',
-        { type: 'git', url: 'https://mirror.example.com:8443/gitlab.com/group/sub/repo.git' },
-      ],
-    ])('keeps the proxy host for mirrored repo URL %s', (url, expected) => {
-      expect(parseSource(url)).toEqual(expected);
-    });
-
-    it.each([
-      'https://github.com.example.com/owner/repo',
-      'https://example.com/?next=github.com/owner/repo',
-    ])('does not treat a non-GitHub host as GitHub: %s', (url) => {
-      const result = parseSource(url);
-      expect(result.type).not.toBe('github');
-      expect(result.url).toBe(url);
-    });
-
-    it('treats a proxied archive URL as a download source, not a repo', () => {
-      const url = 'https://gh-proxy.org/https://github.com/owner/repo/archive/main.zip';
-      expect(parseSource(url)).toEqual({ type: 'well-known', url });
-    });
-  });
-
-  describe('GitHub.com host matching', () => {
-    it.each([
-      ['https://GitHub.com/owner/repo', 'https://github.com/owner/repo.git'],
-      ['https://www.github.com/owner/repo', 'https://github.com/owner/repo.git'],
-      ['github.com/owner/repo', 'https://github.com/owner/repo.git'],
-      ['https://github.com/owner/repo?tab=readme-ov-file', 'https://github.com/owner/repo.git'],
-      ['https://github.com/owner/repo.git/', 'https://github.com/owner/repo.git'],
-    ])('normalizes %s', (input, url) => {
-      expect(parseSource(input)).toEqual({ type: 'github', url });
-    });
-
-    it('keeps the ref for a tree URL with a trailing slash or query', () => {
-      expect(parseSource('https://github.com/owner/repo/tree/main/')).toEqual({
-        type: 'github',
-        url: 'https://github.com/owner/repo.git',
+          url: 'https://code.sdsdev.co.kr/owner/repo.git',
+        });
+      }
+    );
+    it('keeps a tree ref with trailing slash', () => {
+      expect(parseSource('https://code.sdsdev.co.kr/owner/repo/tree/main/')).toEqual({
+        type: 'git',
+        url: 'https://code.sdsdev.co.kr/owner/repo.git',
         ref: 'main',
       });
-      expect(parseSource('https://github.com/owner/repo/tree/main/skills/x/?plain=1')).toEqual({
-        type: 'github',
-        url: 'https://github.com/owner/repo.git',
-        ref: 'main',
-        subpath: 'skills/x',
-      });
-    });
-
-    it('does not treat a non-GitLab host as gitlab.com', () => {
-      const url = 'https://notgitlab.com/group/repo';
-      expect(parseSource(url).type).not.toBe('gitlab');
     });
   });
 
   describe('GitHub shorthand tests', () => {
     it('GitHub shorthand - owner/repo', () => {
       const result = parseSource('owner/repo');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBeUndefined();
       expect(result.subpath).toBeUndefined();
     });
 
     it('GitHub shorthand - owner/repo/path', () => {
       const result = parseSource('owner/repo/skills/my-skill');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.subpath).toBe('skills/my-skill');
     });
 
     it('GitHub shorthand - owner/repo/ trailing slash', () => {
       const result = parseSource('owner/repo/');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.subpath).toBeUndefined();
     });
 
     it('GitHub shorthand - owner/repo@skill (skill filter syntax)', () => {
       const result = parseSource('owner/repo@my-skill');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.skillFilter).toBe('my-skill');
       expect(result.subpath).toBeUndefined();
     });
 
     it('GitHub shorthand - owner/repo@skill with hyphenated skill name', () => {
       const result = parseSource('vercel-labs/agent-skills@find-skills');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/vercel-labs/agent-skills.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/vercel-labs/agent-skills.git');
       expect(result.skillFilter).toBe('find-skills');
       expect(result.ref).toBeUndefined();
     });
 
     it('GitHub shorthand - owner/repo@v1.2.3 pins the release tag', () => {
       const result = parseSource('mattpocock/skills@v1.3.1');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/mattpocock/skills.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/mattpocock/skills.git');
       expect(result.ref).toBe('v1.3.1');
       expect(result.skillFilter).toBeUndefined();
     });
@@ -407,24 +314,24 @@ describe('parseSource', () => {
 
     it('GitHub shorthand - owner/repo#branch', () => {
       const result = parseSource('owner/repo#my-branch');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('my-branch');
       expect(result.subpath).toBeUndefined();
     });
 
     it('GitHub shorthand - owner/repo/path#branch', () => {
       const result = parseSource('owner/repo/skills/my-skill#feature/skills');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('feature/skills');
       expect(result.subpath).toBe('skills/my-skill');
     });
 
     it('GitHub shorthand - owner/repo#branch@skill', () => {
       const result = parseSource('owner/repo#my-branch@my-skill');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('my-branch');
       expect(result.skillFilter).toBe('my-skill');
     });
@@ -460,89 +367,84 @@ describe('parseSource', () => {
 
   describe('Git URL fallback tests', () => {
     it('Git URL - SSH format', () => {
-      const result = parseSource('git@github.com:owner/repo.git');
+      const result = parseSource('git@code.sdsdev.co.kr:owner/repo.git');
       expect(result.type).toBe('git');
-      expect(result.url).toBe('git@github.com:owner/repo.git');
+      expect(result.url).toBe('git@code.sdsdev.co.kr:owner/repo.git');
     });
 
     it('Git URL - SSH format with #branch', () => {
-      const result = parseSource('git@github.com:owner/repo.git#feature/install');
+      const result = parseSource('git@code.sdsdev.co.kr:owner/repo.git#feature/install');
       expect(result.type).toBe('git');
-      expect(result.url).toBe('git@github.com:owner/repo.git');
+      expect(result.url).toBe('git@code.sdsdev.co.kr:owner/repo.git');
       expect(result.ref).toBe('feature/install');
     });
 
     it('Git URL - SSH format with /tree/branch', () => {
-      const result = parseSource('git@github.com:owner/repo/tree/mybranch');
+      const result = parseSource('git@code.sdsdev.co.kr:owner/repo/tree/mybranch');
       expect(result.type).toBe('git');
-      expect(result.url).toBe('git@github.com:owner/repo.git');
+      expect(result.url).toBe('git@code.sdsdev.co.kr:owner/repo.git');
       expect(result.ref).toBe('mybranch');
       expect(result.subpath).toBeUndefined();
     });
 
     it('Git URL - SSH format with /tree/branch/path', () => {
-      const result = parseSource('git@github.com:owner/repo/tree/mybranch/skills/foo');
+      const result = parseSource('git@code.sdsdev.co.kr:owner/repo/tree/mybranch/skills/foo');
       expect(result.type).toBe('git');
-      expect(result.url).toBe('git@github.com:owner/repo.git');
+      expect(result.url).toBe('git@code.sdsdev.co.kr:owner/repo.git');
       expect(result.ref).toBe('mybranch');
       expect(result.subpath).toBe('skills/foo');
     });
 
     it('Git URL - SSH format with .git and /tree/branch', () => {
-      const result = parseSource('git@github.com:owner/repo.git/tree/mybranch');
+      const result = parseSource('git@code.sdsdev.co.kr:owner/repo.git/tree/mybranch');
       expect(result.type).toBe('git');
-      expect(result.url).toBe('git@github.com:owner/repo.git');
+      expect(result.url).toBe('git@code.sdsdev.co.kr:owner/repo.git');
       expect(result.ref).toBe('mybranch');
     });
 
-    it('Git URL - SSH format with /tree/ on non-GitHub host is left as-is', () => {
-      const result = parseSource('git@git.example.com:group/repo/tree/mybranch.git');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('git@git.example.com:group/repo/tree/mybranch.git');
-      expect(result.ref).toBeUndefined();
+    it('intranet rejects: Git URL - SSH format with /tree/ on non-GitHub host is left as-is', () => {
+      expect(() => parseSource('git@git.example.com:group/repo/tree/mybranch.git')).toThrow(
+        /intranet-only/
+      );
     });
 
     it('Git URL - SSH format with /tree/ rejects path traversal', () => {
-      expect(() => parseSource('git@github.com:owner/repo/tree/main/../../etc')).toThrow(
+      expect(() => parseSource('git@code.sdsdev.co.kr:owner/repo/tree/main/../../etc')).toThrow(
         /Unsafe subpath/
       );
     });
 
-    it('Git URL - custom host', () => {
-      const result = parseSource('https://git.example.com/owner/repo.git');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://git.example.com/owner/repo.git');
+    it('intranet rejects: Git URL - custom host', () => {
+      expect(() => parseSource('https://git.example.com/owner/repo.git')).toThrow(/intranet-only/);
     });
 
-    it('Git URL - https format with #branch', () => {
-      const result = parseSource('https://git.example.com/owner/repo.git#release-2026');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('https://git.example.com/owner/repo.git');
-      expect(result.ref).toBe('release-2026');
+    it('intranet rejects: Git URL - https format with #branch', () => {
+      expect(() => parseSource('https://git.example.com/owner/repo.git#release-2026')).toThrow(
+        /intranet-only/
+      );
     });
 
-    it('Git URL - ssh scheme with #branch', () => {
-      const result = parseSource('ssh://git@git.example.com:7999/owner/repo.git#release-2026');
-      expect(result.type).toBe('git');
-      expect(result.url).toBe('ssh://git@git.example.com:7999/owner/repo.git');
-      expect(result.ref).toBe('release-2026');
+    it('intranet rejects: Git URL - ssh scheme with #branch', () => {
+      expect(() =>
+        parseSource('ssh://git@git.example.com:7999/owner/repo.git#release-2026')
+      ).toThrow(/intranet-only/);
     });
   });
 });
 
 describe('getOwnerRepo', () => {
   it('getOwnerRepo - GitHub URL', () => {
-    const parsed = parseSource('https://github.com/owner/repo');
+    const parsed = parseSource('https://code.sdsdev.co.kr/owner/repo');
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
   it('getOwnerRepo - GitHub URL with .git', () => {
-    const parsed = parseSource('https://github.com/owner/repo.git');
+    const parsed = parseSource('https://code.sdsdev.co.kr/owner/repo.git');
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
   it('getOwnerRepo - GitHub URL with tree/branch/path', () => {
-    const parsed = parseSource('https://github.com/owner/repo/tree/main/skills/my-skill');
+    const parsed = parseSource('https://code.sdsdev.co.kr/owner/repo/tree/main/skills/my-skill');
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
@@ -556,19 +458,20 @@ describe('getOwnerRepo', () => {
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
-  it('getOwnerRepo - GitLab URL', () => {
-    const parsed = parseSource('https://gitlab.com/owner/repo');
-    expect(getOwnerRepo(parsed)).toBe('owner/repo');
+  it('intranet rejects: getOwnerRepo - GitLab URL', () => {
+    expect(() => parseSource('https://gitlab.com/owner/repo')).toThrow(/intranet-only/);
   });
 
-  it('getOwnerRepo - GitLab URL with tree', () => {
-    const parsed = parseSource('https://gitlab.com/owner/repo/-/tree/main/skills');
-    expect(getOwnerRepo(parsed)).toBe('owner/repo');
+  it('intranet rejects: getOwnerRepo - GitLab URL with tree', () => {
+    expect(() => parseSource('https://gitlab.com/owner/repo/-/tree/main/skills')).toThrow(
+      /intranet-only/
+    );
   });
 
-  it('getOwnerRepo - GitLab URL with subgroup', () => {
-    const parsed = parseSource('https://gitlab.com/coresofthq/ai/agent-skills');
-    expect(getOwnerRepo(parsed)).toBe('coresofthq/ai/agent-skills');
+  it('intranet rejects: getOwnerRepo - GitLab URL with subgroup', () => {
+    expect(() => parseSource('https://gitlab.com/coresofthq/ai/agent-skills')).toThrow(
+      /intranet-only/
+    );
   });
 
   it('getOwnerRepo - local path returns null', () => {
@@ -581,24 +484,21 @@ describe('getOwnerRepo', () => {
     expect(getOwnerRepo(parsed)).toBeNull();
   });
 
-  it('getOwnerRepo - custom git host extracts owner/repo', () => {
-    const parsed = parseSource('https://git.example.com/owner/repo.git');
-    expect(getOwnerRepo(parsed)).toBe('owner/repo');
+  it('intranet rejects: getOwnerRepo - custom git host extracts owner/repo', () => {
+    expect(() => parseSource('https://git.example.com/owner/repo.git')).toThrow(/intranet-only/);
   });
 
   it('getOwnerRepo - SSH format extracts owner/repo', () => {
-    const parsed = parseSource('git@github.com:owner/repo.git');
+    const parsed = parseSource('git@code.sdsdev.co.kr:owner/repo.git');
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
-  it('getOwnerRepo - private GitLab instance extracts owner/repo', () => {
-    const parsed = parseSource('https://gitlab.company.com/team/repo');
-    expect(getOwnerRepo(parsed)).toBe('team/repo');
+  it('intranet rejects: getOwnerRepo - private GitLab instance extracts owner/repo', () => {
+    expect(() => parseSource('https://gitlab.company.com/team/repo')).toThrow(/intranet-only/);
   });
 
-  it('getOwnerRepo - self-hosted git with .git suffix', () => {
-    const parsed = parseSource('https://git.internal.io/myteam/skills.git');
-    expect(getOwnerRepo(parsed)).toBe('myteam/skills');
+  it('intranet rejects: getOwnerRepo - self-hosted git with .git suffix', () => {
+    expect(() => parseSource('https://git.internal.io/myteam/skills.git')).toThrow(/intranet-only/);
   });
 
   it('getOwnerRepo - URL with query string', () => {
@@ -640,7 +540,7 @@ describe('getOwnerRepo', () => {
   });
 
   it('getOwnerRepo - SSH URL (GitHub)', () => {
-    const parsed = { type: 'git', url: 'git@github.com:owner/repo.git' } as const;
+    const parsed = { type: 'git', url: 'git@code.sdsdev.co.kr:owner/repo.git' } as const;
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
@@ -658,7 +558,7 @@ describe('getOwnerRepo', () => {
   });
 
   it('getOwnerRepo - SSH URL without .git suffix', () => {
-    const parsed = { type: 'git', url: 'git@github.com:owner/repo' } as const;
+    const parsed = { type: 'git', url: 'git@code.sdsdev.co.kr:owner/repo' } as const;
     expect(getOwnerRepo(parsed)).toBe('owner/repo');
   });
 
@@ -676,22 +576,22 @@ describe('getOwnerRepo', () => {
   });
 
   it('getOwnerRepo - SSH URL without path (returns null)', () => {
-    const parsed = { type: 'git', url: 'git@github.com:repo.git' } as const;
+    const parsed = { type: 'git', url: 'git@code.sdsdev.co.kr:repo.git' } as const;
     expect(getOwnerRepo(parsed)).toBeNull();
   });
 });
 
 describe('Source aliases', () => {
-  it('resolves coinbase/agentWallet to coinbase/agentic-wallet-skills', () => {
+  it('does not apply public aliases to enterprise coinbase/agentWallet', () => {
     const result = parseSource('coinbase/agentWallet');
-    expect(result.type).toBe('github');
-    expect(result.url).toBe('https://github.com/coinbase/agentic-wallet-skills.git');
+    expect(result.type).toBe('git');
+    expect(result.url).toBe('https://code.sdsdev.co.kr/coinbase/agentWallet.git');
   });
 
-  it('resolves vercel-labs/vercel-skills to vercel-labs/agent-skills', () => {
+  it('does not apply public aliases to enterprise vercel-labs/vercel-skills', () => {
     const result = parseSource('vercel-labs/vercel-skills');
-    expect(result.type).toBe('github');
-    expect(result.url).toBe('https://github.com/vercel-labs/agent-skills.git');
+    expect(result.type).toBe('git');
+    expect(result.url).toBe('https://code.sdsdev.co.kr/vercel-labs/vercel-skills.git');
   });
 });
 
@@ -699,50 +599,46 @@ describe('Prefix shorthand tests', () => {
   describe('github: prefix', () => {
     it('github:owner/repo - basic', () => {
       const result = parseSource('github:owner/repo');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.subpath).toBeUndefined();
     });
 
     it('github:owner/repo/subpath', () => {
       const result = parseSource('github:owner/repo/skills/my-skill');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.subpath).toBe('skills/my-skill');
     });
 
     it('github:owner/repo@skill-name', () => {
       const result = parseSource('github:owner/repo@my-skill');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.skillFilter).toBe('my-skill');
     });
 
     it('github:googleworkspace/cli', () => {
       const result = parseSource('github:googleworkspace/cli');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/googleworkspace/cli.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/googleworkspace/cli.git');
     });
 
     it('github:owner/repo#branch', () => {
       const result = parseSource('github:owner/repo#feature/install');
-      expect(result.type).toBe('github');
-      expect(result.url).toBe('https://github.com/owner/repo.git');
+      expect(result.type).toBe('git');
+      expect(result.url).toBe('https://code.sdsdev.co.kr/owner/repo.git');
       expect(result.ref).toBe('feature/install');
     });
   });
 
   describe('gitlab: prefix', () => {
-    it('gitlab:owner/repo - basic', () => {
-      const result = parseSource('gitlab:owner/repo');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/owner/repo.git');
+    it('intranet rejects: gitlab:owner/repo - basic', () => {
+      expect(() => parseSource('gitlab:owner/repo')).toThrow(/intranet-only/);
     });
 
-    it('gitlab:group/subgroup/repo', () => {
-      const result = parseSource('gitlab:group/subgroup/repo');
-      expect(result.type).toBe('gitlab');
-      expect(result.url).toBe('https://gitlab.com/group/subgroup/repo.git');
+    it('intranet rejects: gitlab:group/subgroup/repo', () => {
+      expect(() => parseSource('gitlab:group/subgroup/repo')).toThrow(/intranet-only/);
     });
   });
 });

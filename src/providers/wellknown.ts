@@ -1,3 +1,4 @@
+import { intranetFetch, isIntranetMode } from '../intranet.ts';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import { readZipArchive } from '../archive.ts';
@@ -214,7 +215,7 @@ export class WellKnownProvider implements HostProvider {
 
       for (const { indexUrl, baseUrl: resolvedBase, wellKnownPath } of urlsToTry) {
         try {
-          const response = await fetch(indexUrl, {
+          const response = await intranetFetch(indexUrl, {
             signal,
             ...(options?.updateCheck ? { headers: { 'X-Skills-Update-Check': '1' } } : {}),
           });
@@ -454,7 +455,7 @@ export class WellKnownProvider implements HostProvider {
     try {
       const skillBaseUrl = `${entry.baseUrl.replace(/\/$/, '')}/${entry.wellKnownPath}/${entry.name}`;
       const skillMdUrl = `${skillBaseUrl}/SKILL.md`;
-      const response = await fetch(skillMdUrl);
+      const response = await intranetFetch(skillMdUrl);
       if (!response.ok) return null;
 
       const content = await response.text();
@@ -481,7 +482,7 @@ export class WellKnownProvider implements HostProvider {
             otherFiles.map(async (filePath) => {
               let status: number | undefined;
               try {
-                const fileResponse = await fetch(`${skillBaseUrl}/${filePath}`);
+                const fileResponse = await intranetFetch(`${skillBaseUrl}/${filePath}`);
                 if (fileResponse.ok) {
                   return [filePath, new Uint8Array(await fileResponse.arrayBuffer())] as const;
                 }
@@ -508,7 +509,7 @@ export class WellKnownProvider implements HostProvider {
     entry: Extract<NormalizedWellKnownEntry, { version: '0.2.0' }>
   ) {
     try {
-      const response = await fetch(entry.artifactUrl);
+      const response = await intranetFetch(entry.artifactUrl);
       if (!response.ok) return null;
 
       const contentType = response.headers.get('content-type') ?? '';

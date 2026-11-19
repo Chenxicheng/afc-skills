@@ -2,7 +2,7 @@ import { existsSync, realpathSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { Sandbox, entries, isSymlink, readSkill, type JsonListEntry } from './sandbox.ts';
+import { Sandbox, entries, isSymlink, readSkill, type JsonListEntry } from '../sandbox.ts';
 
 /**
  * Live GitHub repositories of different shapes. Skill sets drift as the repos

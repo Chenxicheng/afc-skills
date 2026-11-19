@@ -73,7 +73,8 @@ export function setDetectedAgent(agentName: string | null): void {
 }
 
 function isEnabled(): boolean {
-  return !process.env.DISABLE_TELEMETRY && !process.env.DO_NOT_TRACK;
+  // Enterprise distribution never sends telemetry or audit data to public services.
+  return false;
 }
 
 export function setVersion(version: string): void {

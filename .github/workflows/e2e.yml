@@ -1,8 +1,8 @@
 name: E2E
 
-# Packs the CLI, installs the tarball into a clean prefix, and drives it against
-# live sources (GitHub, skills.sh blobs, vercel.com well-known, npm). Runs daily
-# too, because those sources change without any commit here.
+# Cloud CI may provision build dependencies online. The installed-package E2E
+# suite itself uses offline installation and local fixtures, never live public
+# skill services. Corporate GitHub live verification is a separate opt-in command.
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'npm spec to test instead of packing this checkout (e.g. /path/to/afc-skills-1.0.0.tgz)'
+        description: 'Local .tgz path already available on the runner (optional); URLs/registry specs are rejected'
         required: false
         type: string
 
@@ -62,6 +62,4 @@ jobs:
       - name: E2E tests
         run: pnpm test:e2e
         env:
-          # Authenticated GitHub API calls avoid the 60/hour anonymous limit.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SKILLS_E2E_PACKAGE: ${{ inputs.package }}

@@ -52,11 +52,14 @@ describe('skills CLI', () => {
       expect(result.stdout).toContain('│   afc-skills   │');
       const output = stripLogo(result.stdout);
       expect(output).toContain('Agent skills for aipro, Claude Code, and more');
-      expect(output).toContain('npx afc-skills add');
-      expect(output).toContain('npx afc-skills use');
-      expect(output).toContain('npx afc-skills update');
-      expect(output).toContain('npx afc-skills init');
-      expect(output).toContain('skills.sh');
+      expect(output).toContain('afc-skills add');
+      expect(output).toContain('afc-skills use');
+      expect(output).toContain('afc-skills update');
+      expect(output).toContain('afc-skills init');
+      expect(output).toContain(
+        'List internal skills with afc-skills add <organization/repository> --list'
+      );
+      expect(output).not.toContain('skills.sh');
     });
   });
 

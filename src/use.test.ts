@@ -241,7 +241,7 @@ describe('use command', () => {
     it.each(['healthy', 'broken'])(
       'only downloads supporting files for the selected well-known skill: %s',
       async (selector) => {
-        const source = 'https://example.com';
+        const source = 'https://code.sdsdev.co.kr';
         const baseUrl = `${source}/.well-known/agent-skills`;
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
           const href = String(url);
@@ -310,7 +310,7 @@ describe('use command', () => {
       }
     );
 
-    it('uses a direct archive when well-known discovery misses', async () => {
+    it('uses an enterprise release archive directly', async () => {
       const archiveRoot = join(testDir, 'direct-archive');
       writeSkill(archiveRoot, 'direct-skill', 'Direct archive body.');
       writeFileSync(join(archiveRoot, 'reference.md'), 'Reference');
@@ -320,7 +320,7 @@ describe('use command', () => {
         'reference.md',
       ]);
       const archive = readFileSync(archivePath);
-      const directUrl = 'https://downloads.example.com/direct-skill?signature=secret';
+      const directUrl = 'https://code.sdsdev.co.kr/team/repo/releases/download/v1/direct-skill.tgz';
 
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         if (String(url) === directUrl) {

@@ -50,6 +50,8 @@ describe('install mode across updates', () => {
     execFileSync('git', ['init', '-q'], { cwd: repo });
     publish('v1');
     mkdirSync(join(project, '.claude'), { recursive: true });
+    // Agent detection uses the home directory, not only project install directories.
+    mkdirSync(join(root, 'home', '.claude'), { recursive: true });
   });
 
   afterEach(() => {
@@ -61,7 +63,7 @@ describe('install mode across updates', () => {
     expect(lockEntry().installMode).toBe('copy');
     publish('v2');
 
-    expect(runCli(['update', '-y'], project).exitCode).toBe(0);
+    expect(runCli(['update', '-y'], project, { HOME: join(root, 'home') }).exitCode).toBe(0);
 
     const skillDir = join(project, '.claude', 'skills', 'alpha');
     expect(lstatSync(skillDir).isSymbolicLink()).toBe(false);

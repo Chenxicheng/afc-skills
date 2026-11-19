@@ -51,10 +51,8 @@ describe('cloneRepo transport allowlist', () => {
 
     // Make sure user's env doesn't bypass our allow list
     process.env.GIT_ALLOW_PROTOCOL = 'skills-test:ext:fd';
-    await expect(cloneRepo('skills-test::fixture')).rejects.toThrow(/transport .* not allowed/i);
-    await expect(cloneRepo('ext::git-remote-skills-test')).rejects.toThrow(
-      'Unsupported Git transport: ext'
-    );
-    await expect(cloneRepo('fd::3')).rejects.toThrow(/transport .* not allowed/i);
+    await expect(cloneRepo('skills-test::fixture')).rejects.toThrow(/intranet-only/);
+    await expect(cloneRepo('ext::git-remote-skills-test')).rejects.toThrow(/intranet-only/);
+    await expect(cloneRepo('fd::3')).rejects.toThrow(/intranet-only/);
   });
 });

@@ -94,20 +94,12 @@ describe('add command', () => {
     expect(result.exitCode).toBe(1);
   });
 
-  it('special-cases notion and requires the ntn CLI', () => {
+  it('rejects Notion in the intranet build without recommending external login', () => {
     const result = runCli(['add', 'notion', '--list'], testDir, {
       PATH: join(testDir, 'missing-bin'),
     });
-
-    expect(result.stdout).toContain('Notion CLI (ntn) is required');
-    const docsLine = result.stdout
-      .split('\n')
-      .find((line) => line.includes('https://developers.notion.com/cli/get-started/overview'));
-    // clack draws an ASCII gutter on Windows when CI is unset, which runCli ensures
-    expect(docsLine?.replace(/^\s*[│|]?\s*/, '')).toBe(
-      'https://developers.notion.com/cli/get-started/overview'
-    );
-    expect(result.stdout).toContain('ntn login');
+    expect(result.stdout).toContain('intranet-only');
+    expect(result.stdout).not.toContain('ntn login');
     expect(result.stdout).not.toContain('Cloning repository');
     expect(result.exitCode).toBe(1);
   });
@@ -414,10 +406,12 @@ Instructions here.
     const targetDir = join(testDir, 'project');
     mkdirSync(targetDir, { recursive: true });
 
-    // No agents are detected in the isolated test home, and stdin is a pipe
-    // that hits EOF immediately, so the agent picker cannot collect input.
-    // The CLI previously exited 0 here with nothing installed.
-    const result = runCli(['add', testDir], targetDir);
+    // Force an actual choice regardless of machine-wide /etc/codex detection.
+    // A piped stdin cannot answer the agent picker.
+    const home = join(testDir, 'isolated-home');
+    mkdirSync(join(home, '.claude'), { recursive: true });
+    mkdirSync(join(home, '.cursor'), { recursive: true });
+    const result = runCli(['add', testDir], targetDir, { HOME: home, USERPROFILE: home });
     expect(result.exitCode).not.toBe(0);
     expect(result.stdout).toContain('Installation cancelled');
     expect(result.stderr).toContain('not a TTY');

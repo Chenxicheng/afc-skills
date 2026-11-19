@@ -97,7 +97,7 @@ describe('blob clone fallback output', () => {
     await rm(base, { recursive: true, force: true });
   });
 
-  it('silently falls back to cloning when the blob fast path is unavailable', async () => {
+  it('clones enterprise sources directly without trying a public blob fast path', async () => {
     await runAdd(['remotion-dev/skills'], {
       yes: true,
       agent: ['codex'],
@@ -105,10 +105,10 @@ describe('blob clone fallback output', () => {
       mode: 'copy',
     });
 
-    expect(tryBlobInstall).toHaveBeenCalled();
+    expect(tryBlobInstall).not.toHaveBeenCalled();
     expect(cloneRepo).toHaveBeenCalled();
     expect(spinnerStop).not.toHaveBeenCalledWith('Falling back to clone…');
-    expect(spinnerMessage).toHaveBeenCalledWith('Cloning repository…');
+    expect(spinnerStart).toHaveBeenCalledWith('Cloning repository…');
     expect(spinnerStop).toHaveBeenCalledWith('Repository cloned');
   });
 });

@@ -47,50 +47,52 @@ function showBanner(): void {
   console.log(`${DIM}Agent skills for aipro, Claude Code, and more${RESET}`);
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills add ${DIM}<package>${RESET}        ${DIM}Add a new skill${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills add ${DIM}<package>${RESET}        ${DIM}Add a new skill${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills use ${DIM}<package>@<skill>${RESET} ${DIM}Use a skill without installing${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills use ${DIM}<package>@<skill>${RESET} ${DIM}Use a skill without installing${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills remove${RESET}               ${DIM}Remove installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills remove${RESET}               ${DIM}Remove installed skills${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills list${RESET}                 ${DIM}List installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills list${RESET}                 ${DIM}List installed skills${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills find ${DIM}[query]${RESET}         ${DIM}Search for skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills find ${DIM}[query]${RESET}         ${DIM}Public search disabled (intranet)${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills update${RESET}               ${DIM}Update installed skills${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills update${RESET}               ${DIM}Update installed skills${RESET}`
   );
   console.log();
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills experimental_install${RESET} ${DIM}Restore from skills-lock.json${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills experimental_install${RESET} ${DIM}Restore from skills-lock.json${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills init ${DIM}[name]${RESET}          ${DIM}Create a new skill${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills init ${DIM}[name]${RESET}          ${DIM}Create a new skill${RESET}`
   );
   console.log(
-    `  ${DIM}$${RESET} ${TEXT}npx afc-skills experimental_sync${RESET}    ${DIM}Sync skills from node_modules${RESET}`
+    `  ${DIM}$${RESET} ${TEXT}afc-skills experimental_sync${RESET}    ${DIM}Sync skills from node_modules${RESET}`
   );
   console.log();
-  console.log(`${DIM}try:${RESET} npx afc-skills add vercel-labs/agent-skills`);
+  console.log(`${DIM}try:${RESET} afc-skills add organization/skills`);
   console.log();
-  console.log(`Discover more skills at ${TEXT}https://skills.sh/${RESET}`);
+  console.log(
+    `List internal skills with ${TEXT}afc-skills add <organization/repository> --list${RESET}`
+  );
   console.log();
 }
 
 function showHelp(): void {
   const examples: Array<[command: string, description?: string]> = [
-    ['afc-skills add vercel-labs/agent-skills'],
-    ['afc-skills use vercel-labs/agent-skills@vercel-optimize | claude'],
-    ['afc-skills use vercel-labs/agent-skills --skill vercel-optimize --agent claude-code'],
-    ['afc-skills add vercel-labs/agent-skills -g'],
-    ['afc-skills add vercel-labs/agent-skills --agent claude-code cursor'],
-    ['afc-skills add vercel-labs/agent-skills --skill pr-review commit'],
-    ['afc-skills add vercel-labs/agent-skills --json -y', 'JSON output'],
+    ['afc-skills add organization/skills'],
+    ['afc-skills use organization/skills@vercel-optimize | claude'],
+    ['afc-skills use organization/skills --skill vercel-optimize --agent claude-code'],
+    ['afc-skills add organization/skills -g'],
+    ['afc-skills add organization/skills --agent claude-code cursor'],
+    ['afc-skills add organization/skills --skill pr-review commit'],
+    ['afc-skills add organization/skills --json -y', 'JSON output'],
     ['afc-skills remove', 'interactive remove'],
     ['afc-skills remove web-design', 'remove by name'],
     ['afc-skills rm --global frontend-design'],
@@ -98,9 +100,7 @@ function showHelp(): void {
     ['afc-skills ls -g', 'list global skills'],
     ['afc-skills ls -a claude-code', 'filter by agent'],
     ['afc-skills ls --json', 'JSON output'],
-    ['afc-skills find', 'interactive search'],
-    ['afc-skills find typescript', 'search by keyword'],
-    ['afc-skills find react --owner vercel', 'search within an owner'],
+    ['afc-skills add organization/skills --list', 'list internal repository skills'],
     ['afc-skills update'],
     ['afc-skills update my-skill', 'update a single skill'],
     ['afc-skills update -g', 'update global skills only'],
@@ -125,18 +125,17 @@ ${BOLD}Usage:${RESET} afc-skills <command> [options]
 
 ${BOLD}Manage Skills:${RESET}
   add <package>        Add a skill package (alias: a)
-                       e.g. vercel-labs/agent-skills
-                            notion
-                            https://notion.so/<skill-page>
-                            https://github.com/vercel-labs/agent-skills
+                       e.g. organization/skills
+                            ./local-skills-directory
+                            https://code.sdsdev.co.kr/organization/skills
   use <package>@<skill>
                        Generate a prompt for using one skill without installing it
   remove [skills]      Remove installed skills
   list, ls             List installed skills
-  find [query]         Search for skills interactively
+  find [query]         Public search disabled in this intranet build
 
 ${BOLD}Find Options:${RESET}
-  --owner <owner>        Search only repositories from a GitHub owner
+  --owner <owner>        Unavailable with public search disabled
 
 ${BOLD}Updates:${RESET}
   update [skills...]   Update skills to latest versions (alias: upgrade)
@@ -208,7 +207,7 @@ ${BOLD}Options:${RESET}
 ${BOLD}Examples:${RESET}
 ${formattedExamples}
 
-Discover more skills at ${TEXT}https://skills.sh/${RESET}
+List internal skills with ${TEXT}afc-skills add <organization/repository> --list${RESET}
 `);
 }
 
@@ -239,7 +238,7 @@ ${BOLD}Examples:${RESET}
   ${DIM}$${RESET} afc-skills remove --all                      ${DIM}# remove all skills${RESET}
   ${DIM}$${RESET} afc-skills remove --skill '*' -a cursor      ${DIM}# remove all skills from cursor${RESET}
 
-Discover more skills at ${TEXT}https://skills.sh/${RESET}
+List internal skills with ${TEXT}afc-skills add <organization/repository> --list${RESET}
 `);
 }
 
@@ -296,13 +295,15 @@ Describe when this skill should be used.
   console.log();
   console.log(`${DIM}Publishing:${RESET}`);
   console.log(
-    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}npx afc-skills add <owner>/<repo>${RESET}`
+    `  ${DIM}GitHub:${RESET}  Push to a repo, then ${TEXT}afc-skills add <owner>/<repo>${RESET}`
   );
   console.log(
-    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}npx afc-skills add https://example.com/${displayPath}${RESET}`
+    `  ${DIM}URL:${RESET}     Host the file, then ${TEXT}afc-skills add https://code.sdsdev.co.kr/organization/skills/raw/main/${displayPath}${RESET}`
   );
   console.log();
-  console.log(`Browse existing skills for inspiration at ${TEXT}https://skills.sh/${RESET}`);
+  console.log(
+    `Browse an internal repository with ${TEXT}afc-skills add <organization/repository> --list${RESET}`
+  );
   console.log();
 }
 

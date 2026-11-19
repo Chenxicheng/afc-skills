@@ -5,7 +5,7 @@ import { WellKnownProvider } from '../src/providers/wellknown.ts';
 import { parseSource } from '../src/source-parser.ts';
 import { createZip } from './fixtures/zip.ts';
 
-const origin = 'https://skills.example.com';
+const origin = 'https://code.sdsdev.co.kr';
 const content = '---\nname: example\ndescription: Example skill.\n---\n# Example';
 
 function serveIndexes(

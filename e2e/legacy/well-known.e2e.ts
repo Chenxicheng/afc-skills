@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Sandbox, entries, readSkill } from './sandbox.ts';
+import { Sandbox, entries, readSkill } from '../sandbox.ts';
 
 // vercel.com publishes a v0.2.0 discovery index at /.well-known/agent-skills/index.json
 // with both `skill-md` and `archive` entries.

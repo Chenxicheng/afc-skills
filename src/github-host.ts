@@ -1,10 +1,12 @@
-const DEFAULT_GITHUB_HOST = 'github.com';
+import { INTRANET_HOST } from './intranet.ts';
+
+const DEFAULT_GITHUB_HOST = INTRANET_HOST;
 
 /**
- * Return the GitHub host selected by the GitHub CLI.
+ * Return the corporate GitHub host. External GH_HOST values are ignored.
  *
  * GH_HOST is expected to be a hostname, not a URL.
- * Invalid values fall back to github.com instead of being interpolated into
+ * Invalid values fall back to the corporate host instead of being interpolated into
  * clone URLs.
  */
 export function getGitHubHost(): string {
@@ -25,14 +27,14 @@ export function getGitHubHost(): string {
     ) {
       return DEFAULT_GITHUB_HOST;
     }
-    return parsed.hostname;
+    return parsed.hostname === INTRANET_HOST ? parsed.hostname : DEFAULT_GITHUB_HOST;
   } catch {
     return DEFAULT_GITHUB_HOST;
   }
 }
 
-/** Whether a host is GitHub.com or the configured GitHub Enterprise host. */
+/** Whether a host is the approved GitHub Enterprise host. */
 export function isGitHubHost(host: string): boolean {
   const normalizedHost = host.toLowerCase();
-  return normalizedHost === DEFAULT_GITHUB_HOST || normalizedHost === getGitHubHost().toLowerCase();
+  return normalizedHost === INTRANET_HOST;
 }

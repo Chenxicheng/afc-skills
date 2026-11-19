@@ -1,3 +1,5 @@
+> 企业内网版请先阅读 [内网使用说明](intranet.md)。本页上游公共来源示例在内网版中会被拒绝；`find` 公共搜索不可用。
+
 # CLI reference
 
 [Back to the README](../README.md)
@@ -348,19 +350,19 @@ When two skills share a name, sync applies these rules in order:
 3. Two packages at the same level shipping the same skill name install neither.
    Pick one with `--exclude <package>#<skill>`.
 
-| Option                    | Description                                                   |
-| ------------------------- | ------------------------------------------------------------- |
-| `-a, --agent <agents...>` | Select agent directories                                      |
-| `-y, --yes`               | Skip confirmation prompts                                     |
-| `--dry-run`               | Show the plan without installing or removing skills           |
-| `--copy`                  | Copy packaged skills instead of linking them                  |
-| `--no-cleanup`            | Keep skills that are no longer provided                       |
-| `--no-remote`             | Skip installing and removing remote skills                    |
-| `--include <patterns...>` | Include skills by package or `package#skill` pattern          |
-| `--exclude <patterns...>` | Exclude skills by package or `package#skill` pattern          |
-| `-r, --recursive`         | Also read dependencies of workspace packages                  |
-| `--frozen-lockfile`       | Fail instead of changing `skills-lock.json` (default in CI)   |
-| `--no-frozen-lockfile`    | Allow `skills-lock.json` to change in CI                      |
+| Option                    | Description                                                 |
+| ------------------------- | ----------------------------------------------------------- |
+| `-a, --agent <agents...>` | Select agent directories                                    |
+| `-y, --yes`               | Skip confirmation prompts                                   |
+| `--dry-run`               | Show the plan without installing or removing skills         |
+| `--copy`                  | Copy packaged skills instead of linking them                |
+| `--no-cleanup`            | Keep skills that are no longer provided                     |
+| `--no-remote`             | Skip installing and removing remote skills                  |
+| `--include <patterns...>` | Include skills by package or `package#skill` pattern        |
+| `--exclude <patterns...>` | Exclude skills by package or `package#skill` pattern        |
+| `-r, --recursive`         | Also read dependencies of workspace packages                |
+| `--frozen-lockfile`       | Fail instead of changing `skills-lock.json` (default in CI) |
+| `--no-frozen-lockfile`    | Allow `skills-lock.json` to change in CI                    |
 
 The include/exclude filters apply to both packaged and remote skills. For remote
 skills, the package pattern matches the package declaring the entry (`.` for the
@@ -396,13 +398,13 @@ the agents last selected with `skills add`; otherwise to the agents detected on 
 machine. With none of these, only `.agents/skills/` is filled. Skills recorded with
 `installMode: "copy"` are copied into each agent directory instead of linked.
 
-| Option                 | Description                                                 |
-| ---------------------- | ----------------------------------------------------------- |
-| `-a, --agent <agents...>` | Link to these agents (use `'*'` for all)                 |
-| `--dry-run`            | Show what would be restored without installing anything     |
-| `--frozen-lockfile`    | Fail instead of changing `skills-lock.json` (default in CI) |
-| `--no-frozen-lockfile` | Allow `skills-lock.json` to change in CI                    |
-| `--force`              | Reinstall skills that are already in `.agents/skills/`      |
+| Option                    | Description                                                 |
+| ------------------------- | ----------------------------------------------------------- |
+| `-a, --agent <agents...>` | Link to these agents (use `'*'` for all)                    |
+| `--dry-run`               | Show what would be restored without installing anything     |
+| `--frozen-lockfile`       | Fail instead of changing `skills-lock.json` (default in CI) |
+| `--no-frozen-lockfile`    | Allow `skills-lock.json` to change in CI                    |
+| `--force`                 | Reinstall skills that are already in `.agents/skills/`      |
 
 With `--frozen-lockfile`, every restored skill must match the content hash recorded
 in `skills-lock.json`, and so must every skill that is skipped because it is already

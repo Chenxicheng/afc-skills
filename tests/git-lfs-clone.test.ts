@@ -78,6 +78,8 @@ describe('cloneRepo LFS handling', () => {
   smudge = skills-test-missing-lfs smudge -- %f
   clean = skills-test-missing-lfs clean -- %f
   process = skills-test-missing-lfs filter-process
+[url "${source.replaceAll('\\', '/')}"]
+  insteadOf = https://code.sdsdev.co.kr/fixture-lfs.git
 `
     );
     // Preserve callers that inject Git configuration through the environment,
@@ -92,7 +94,8 @@ describe('cloneRepo LFS handling', () => {
     process.env.EDITOR = 'false';
     process.env.PAGER = 'cat';
 
-    const cloneDir = await cloneRepo(source);
+    // Redirect the approved host to a local fixture through an isolated test-only Git config.
+    const cloneDir = await cloneRepo('https://code.sdsdev.co.kr/fixture-lfs.git');
     tempDirs.push(cloneDir);
 
     const actualContents = await readFile(join(cloneDir, 'asset.bin'), 'utf8');

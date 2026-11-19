@@ -90,31 +90,31 @@ describe('git clone fallbacks', () => {
   });
 
   it('parses GitHub HTTPS and SSH clone URLs', () => {
-    expect(parseGitHubRepoUrl('https://github.com/Giphy/giphy-codex-skills.git')).toEqual({
+    expect(parseGitHubRepoUrl('https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git')).toEqual({
       owner: 'Giphy',
       repo: 'giphy-codex-skills',
       slug: 'Giphy/giphy-codex-skills',
-      sshUrl: 'git@github.com:Giphy/giphy-codex-skills.git',
+      sshUrl: 'git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git',
     });
 
-    expect(parseGitHubRepoUrl('git@github.com:Giphy/giphy-codex-skills.git')).toEqual({
+    expect(parseGitHubRepoUrl('git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git')).toEqual({
       owner: 'Giphy',
       repo: 'giphy-codex-skills',
       slug: 'Giphy/giphy-codex-skills',
-      sshUrl: 'git@github.com:Giphy/giphy-codex-skills.git',
+      sshUrl: 'git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git',
     });
   });
 
   it('recognizes the configured GitHub Enterprise host', () => {
-    vi.stubEnv('GH_HOST', 'github.example.com');
+    vi.stubEnv('GH_HOST', 'code.sdsdev.co.kr');
 
-    expect(parseGitHubRepoUrl('https://github.example.com/acme/agent-skills.git')).toEqual({
+    expect(parseGitHubRepoUrl('https://code.sdsdev.co.kr/acme/agent-skills.git')).toEqual({
       owner: 'acme',
       repo: 'agent-skills',
       slug: 'acme/agent-skills',
-      sshUrl: 'git@github.example.com:acme/agent-skills.git',
+      sshUrl: 'git@code.sdsdev.co.kr:acme/agent-skills.git',
     });
-    expect(isGitHubHttpsCloneUrl('https://github.example.com/acme/agent-skills.git')).toBe(true);
+    expect(isGitHubHttpsCloneUrl('https://code.sdsdev.co.kr/acme/agent-skills.git')).toBe(true);
   });
 
   it('detects GitHub SAML SSO clone failures', () => {
@@ -125,9 +125,13 @@ describe('git clone fallbacks', () => {
   });
 
   it('only enables automatic auth fallback for GitHub HTTPS clone URLs', () => {
-    expect(isGitHubHttpsCloneUrl('https://github.com/Giphy/giphy-codex-skills.git')).toBe(true);
-    expect(isGitHubHttpsCloneUrl('http://github.com/Giphy/giphy-codex-skills.git')).toBe(false);
-    expect(isGitHubHttpsCloneUrl('git@github.com:Giphy/giphy-codex-skills.git')).toBe(false);
+    expect(isGitHubHttpsCloneUrl('https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git')).toBe(
+      true
+    );
+    expect(isGitHubHttpsCloneUrl('http://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git')).toBe(
+      false
+    );
+    expect(isGitHubHttpsCloneUrl('git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git')).toBe(false);
     expect(isGitHubHttpsCloneUrl('https://gitlab.com/Giphy/giphy-codex-skills.git')).toBe(false);
   });
 
@@ -140,7 +144,7 @@ describe('git clone fallbacks', () => {
     const submoduleClient = createGitClientMock(vi.fn());
     simpleGitMock.mockReturnValueOnce(client).mockReturnValueOnce(submoduleClient);
 
-    const tempDir = await cloneRepo('https://github.com/Giphy/giphy-codex-skills.git');
+    const tempDir = await cloneRepo('https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git');
     createdDirs.push(tempDir);
 
     expect(simpleGitMock).toHaveBeenCalledWith(
@@ -151,6 +155,9 @@ describe('git clone fallbacks', () => {
           'filter.lfs.clean=',
           'filter.lfs.process=',
           'core.longpaths=true',
+          'http.followRedirects=false',
+          'submodule.recurse=false',
+          'fetch.recurseSubmodules=false',
         ],
         unsafe: {
           allowUnsafeAlias: true,
@@ -197,101 +204,50 @@ describe('git clone fallbacks', () => {
         PAGER: 'skills-test-pager',
       })
     );
-    expect(submoduleClient.cwd).toHaveBeenCalledWith(tempDir);
-    expect(submoduleClient.submoduleUpdate).toHaveBeenCalledWith([
-      '--init',
-      '--recursive',
+    expect(submoduleClient.cwd).not.toHaveBeenCalled();
+    expect(submoduleClient.submoduleUpdate).not.toHaveBeenCalled();
+  });
+
+  it('never initializes recursive submodules', async () => {
+    const client = createGitClientMock(vi.fn().mockResolvedValue(undefined));
+    simpleGitMock.mockReturnValue(client);
+    const dir = await cloneRepo('https://code.sdsdev.co.kr/acme/skills.git');
+    createdDirs.push(dir);
+    expect(client.submoduleUpdate).not.toHaveBeenCalled();
+    expect(simpleGitMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses only same-host SSH fallback without gh', async () => {
+    const first = createGitClientMock(
+      vi.fn().mockRejectedValue(new Error('fatal: Authentication failed'))
+    );
+    const second = createGitClientMock(vi.fn().mockResolvedValue(undefined));
+    simpleGitMock.mockReturnValueOnce(first).mockReturnValueOnce(second);
+    const dir = await cloneRepo('https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git');
+    createdDirs.push(dir);
+    expect(execFileMock).not.toHaveBeenCalled();
+    expect(second.clone).toHaveBeenCalledWith(
+      'git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git',
+      dir,
+      ['--depth', '1']
+    );
+    expect(second.submoduleUpdate).not.toHaveBeenCalled();
+  });
+
+  it('does not use GH_HOST to redirect fallback to a public account', async () => {
+    vi.stubEnv('GH_HOST', 'github.com');
+    const first = createGitClientMock(
+      vi.fn().mockRejectedValue(new Error('fatal: Authentication failed'))
+    );
+    const second = createGitClientMock(vi.fn().mockResolvedValue(undefined));
+    simpleGitMock.mockReturnValueOnce(first).mockReturnValueOnce(second);
+    const dir = await cloneRepo('https://code.sdsdev.co.kr/acme/skills.git');
+    createdDirs.push(dir);
+    expect(execFileMock).not.toHaveBeenCalled();
+    expect(second.clone).toHaveBeenCalledWith('git@code.sdsdev.co.kr:acme/skills.git', dir, [
       '--depth',
       '1',
     ]);
-  });
-
-  it('warns but completes the clone when submodule initialization fails', async () => {
-    const clone = vi.fn().mockResolvedValue(undefined);
-    const submoduleClient = createGitClientMock(vi.fn());
-    submoduleClient.submoduleUpdate.mockRejectedValue(new Error('submodule access denied'));
-    simpleGitMock
-      .mockReturnValueOnce(createGitClientMock(clone))
-      .mockReturnValueOnce(submoduleClient);
-    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    const tempDir = await cloneRepo('https://gitlab.com/acme/skills.git');
-    createdDirs.push(tempDir);
-
-    expect(warning).toHaveBeenCalledWith(
-      'Warning: failed to initialize Git submodules; installed skills may be incomplete.'
-    );
-  });
-
-  it('falls back to gh repo clone for GitHub HTTPS auth failures', async () => {
-    const primaryClone = vi
-      .fn()
-      .mockRejectedValue(
-        new Error(
-          "remote: The 'Giphy' organization has enabled or enforced SAML SSO.\n" +
-            "fatal: unable to access 'https://github.com/Giphy/giphy-codex-skills.git/': The requested URL returned error: 403"
-        )
-      );
-
-    const submoduleClient = createGitClientMock(vi.fn());
-    simpleGitMock
-      .mockReturnValueOnce(createGitClientMock(primaryClone))
-      .mockReturnValueOnce(submoduleClient);
-    mockExecFileSuccess('Git operations protocol: https\n');
-    mockExecFileSuccess();
-
-    const tempDir = await cloneRepo('https://github.com/Giphy/giphy-codex-skills.git');
-    createdDirs.push(tempDir);
-
-    expect(execFileMock).toHaveBeenNthCalledWith(
-      1,
-      'gh',
-      ['auth', 'status', '-h', 'github.com'],
-      expect.any(Object),
-      expect.any(Function)
-    );
-    expect(submoduleClient.submoduleUpdate).toHaveBeenCalledWith([
-      '--init',
-      '--recursive',
-      '--depth',
-      '1',
-    ]);
-    expect(execFileMock).toHaveBeenNthCalledWith(
-      2,
-      'gh',
-      ['repo', 'clone', 'Giphy/giphy-codex-skills', tempDir, '--', '--depth=1'],
-      expect.any(Object),
-      expect.any(Function)
-    );
-  });
-
-  it('uses the enterprise host for gh authentication fallback', async () => {
-    vi.stubEnv('GH_HOST', 'github.example.com');
-    const primaryClone = vi.fn().mockRejectedValue(new Error('fatal: Authentication failed'));
-
-    simpleGitMock
-      .mockReturnValueOnce(createGitClientMock(primaryClone))
-      .mockReturnValueOnce(createGitClientMock(vi.fn()));
-    mockExecFileSuccess('Git operations protocol: https\n');
-    mockExecFileSuccess();
-
-    const tempDir = await cloneRepo('https://github.example.com/acme/agent-skills.git');
-    createdDirs.push(tempDir);
-
-    expect(execFileMock).toHaveBeenNthCalledWith(
-      1,
-      'gh',
-      ['auth', 'status', '-h', 'github.example.com'],
-      expect.any(Object),
-      expect.any(Function)
-    );
-    expect(execFileMock).toHaveBeenNthCalledWith(
-      2,
-      'gh',
-      ['repo', 'clone', 'acme/agent-skills', tempDir, '--', '--depth=1'],
-      expect.any(Object),
-      expect.any(Function)
-    );
   });
 
   it('falls back to SSH when gh clone is unavailable or fails', async () => {
@@ -308,23 +264,21 @@ describe('git clone fallbacks', () => {
     mockExecFileSuccess('Git operations protocol: ssh\n');
     mockExecFileError('gh repo clone failed');
 
-    const tempDir = await cloneRepo('https://github.com/Giphy/giphy-codex-skills.git');
+    const tempDir = await cloneRepo('https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git');
     createdDirs.push(tempDir);
 
-    expect(sshClone).toHaveBeenCalledWith('git@github.com:Giphy/giphy-codex-skills.git', tempDir, [
-      '--depth',
-      '1',
-    ]);
+    expect(sshClone).toHaveBeenCalledWith(
+      'git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git',
+      tempDir,
+      ['--depth', '1']
+    );
     expect(sshClient.env).toHaveBeenCalledWith(
       expect.objectContaining({
         GIT_SSH_COMMAND: process.env.GIT_SSH_COMMAND ?? 'ssh -o BatchMode=yes',
       })
     );
-    expect(submoduleClient.env).toHaveBeenCalledWith(
-      expect.objectContaining({
-        GIT_SSH_COMMAND: process.env.GIT_SSH_COMMAND ?? 'ssh -o BatchMode=yes',
-      })
-    );
+    expect(submoduleClient.env).not.toHaveBeenCalled();
+    expect(execFileMock).not.toHaveBeenCalled();
   });
 
   it('surfaces a targeted SAML SSO message when all fallbacks fail', async () => {
@@ -333,7 +287,7 @@ describe('git clone fallbacks', () => {
       .mockRejectedValue(
         new Error(
           "remote: The 'Giphy' organization has enabled or enforced SAML SSO.\n" +
-            "fatal: unable to access 'https://github.com/Giphy/giphy-codex-skills.git/': The requested URL returned error: 403"
+            "fatal: unable to access 'https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git/': The requested URL returned error: 403"
         )
       );
     const sshClone = vi.fn().mockRejectedValue(new Error('Permission denied (publickey).'));
@@ -344,28 +298,23 @@ describe('git clone fallbacks', () => {
     mockExecFileError('gh auth unavailable');
 
     try {
-      await cloneRepo('https://github.com/Giphy/giphy-codex-skills.git');
+      await cloneRepo('https://code.sdsdev.co.kr/Giphy/giphy-codex-skills.git');
       throw new Error('Expected cloneRepo to throw');
     } catch (error) {
       expect(error).toMatchObject({ code: 'SKILLS_GIT_SAML_SSO_BLOCKED' });
       expect((error as Error).message).toMatch(/SAML SSO/);
-      expect((error as Error).message).toMatch(/git@github\.com:Giphy\/giphy-codex-skills\.git/);
+      expect((error as Error).message).toMatch(
+        /git@code\.sdsdev\.co\.kr:Giphy\/giphy-codex-skills\.git/
+      );
     }
   });
 
   it('does not try gh fallback for GitLab clone URLs', async () => {
-    const primaryClone = vi
-      .fn()
-      .mockRejectedValue(
-        new Error('fatal: unable to access repo: The requested URL returned error: 403')
-      );
-
-    simpleGitMock.mockReturnValueOnce(createGitClientMock(primaryClone));
-
-    await expect(
-      cloneRepo('https://gitlab.com/Giphy/giphy-codex-skills.git')
-    ).rejects.toMatchObject({ code: 'SKILLS_GIT_AUTH_FAILED' });
+    await expect(cloneRepo('https://gitlab.com/Giphy/giphy-codex-skills.git')).rejects.toThrow(
+      /intranet-only/
+    );
     expect(execFileMock).not.toHaveBeenCalled();
+    expect(simpleGitMock).not.toHaveBeenCalled();
   });
 
   it('does not try gh fallback for GitHub SSH clone URLs', async () => {
@@ -373,7 +322,9 @@ describe('git clone fallbacks', () => {
 
     simpleGitMock.mockReturnValueOnce(createGitClientMock(primaryClone));
 
-    await expect(cloneRepo('git@github.com:Giphy/giphy-codex-skills.git')).rejects.toMatchObject({
+    await expect(
+      cloneRepo('git@code.sdsdev.co.kr:Giphy/giphy-codex-skills.git')
+    ).rejects.toMatchObject({
       code: 'SKILLS_GIT_AUTH_FAILED',
     });
     expect(execFileMock).not.toHaveBeenCalled();
@@ -402,7 +353,7 @@ describe('git clone fallbacks', () => {
   });
 
   it('rejects the command-executing ext transport before invoking git', async () => {
-    await expect(cloneRepo('ext::sh -c id')).rejects.toThrow('Unsupported Git transport: ext');
+    await expect(cloneRepo('ext::sh -c id')).rejects.toThrow(/intranet-only/);
 
     expect(simpleGitMock).not.toHaveBeenCalled();
     expect(execFileMock).not.toHaveBeenCalled();
@@ -420,10 +371,10 @@ describe('git clone fallbacks', () => {
       .mockReturnValueOnce(createGitClientMock(primaryClone))
       .mockReturnValueOnce(shaClient);
 
-    const tempDir = await cloneRepo('https://gitlab.com/group/repo.git', FULL_SHA);
+    const tempDir = await cloneRepo('https://code.sdsdev.co.kr/group/repo.git', FULL_SHA);
     createdDirs.push(tempDir);
 
-    expect(primaryClone).toHaveBeenCalledWith('https://gitlab.com/group/repo.git', tempDir, [
+    expect(primaryClone).toHaveBeenCalledWith('https://code.sdsdev.co.kr/group/repo.git', tempDir, [
       '--depth',
       '1',
       '--branch',
@@ -446,7 +397,7 @@ describe('git clone fallbacks', () => {
 
     simpleGitMock.mockReturnValueOnce(primaryClient).mockReturnValueOnce(shaClient);
 
-    const tempDir = await cloneRepo('https://gitlab.com/group/repo.git', FULL_SHA);
+    const tempDir = await cloneRepo('https://code.sdsdev.co.kr/group/repo.git', FULL_SHA);
     createdDirs.push(tempDir);
 
     expect(primaryClient.env).toHaveBeenCalledWith(expect.objectContaining({ LC_ALL: 'C' }));
@@ -468,7 +419,7 @@ describe('git clone fallbacks', () => {
       .mockReturnValueOnce(createGitClientMock(primaryClone))
       .mockReturnValueOnce(shaClient);
 
-    const tempDir = await cloneRepo('https://gitlab.com/group/repo.git', FULL_SHA);
+    const tempDir = await cloneRepo('https://code.sdsdev.co.kr/group/repo.git', FULL_SHA);
     createdDirs.push(tempDir);
 
     expect(simpleGitMock).toHaveBeenNthCalledWith(
@@ -486,7 +437,9 @@ describe('git clone fallbacks', () => {
 
     simpleGitMock.mockReturnValueOnce(createGitClientMock(primaryClone));
 
-    await expect(cloneRepo('https://gitlab.com/group/repo.git', 'deadbeef')).rejects.toMatchObject({
+    await expect(
+      cloneRepo('https://code.sdsdev.co.kr/group/repo.git', 'deadbeef')
+    ).rejects.toMatchObject({
       code: 'SKILLS_GIT_CLONE_FAILED',
     });
     // Only the primary --branch client is constructed; no SHA-fetch client.
@@ -495,13 +448,20 @@ describe('git clone fallbacks', () => {
 
   it('does not attempt the SHA fetch when the failure is not a missing ref', async () => {
     const primaryClone = vi.fn().mockRejectedValue(new Error('fatal: Authentication failed'));
-
-    simpleGitMock.mockReturnValueOnce(createGitClientMock(primaryClone));
-
-    await expect(cloneRepo('https://gitlab.com/group/repo.git', FULL_SHA)).rejects.toMatchObject({
-      code: 'SKILLS_GIT_AUTH_FAILED',
-    });
-    expect(simpleGitMock).toHaveBeenCalledTimes(1);
+    const fallbackClone = vi.fn().mockRejectedValue(new Error('Permission denied (publickey).'));
+    const primary = createGitClientMock(primaryClone);
+    const fallback = createGitClientMock(fallbackClone);
+    simpleGitMock.mockReturnValueOnce(primary).mockReturnValueOnce(fallback);
+    await expect(
+      cloneRepo('https://code.sdsdev.co.kr/group/repo.git', FULL_SHA)
+    ).rejects.toMatchObject({ code: 'SKILLS_GIT_AUTH_FAILED' });
+    expect(simpleGitMock).toHaveBeenCalledTimes(2);
+    expect(fallbackClone).toHaveBeenCalledWith(
+      'git@code.sdsdev.co.kr:group/repo.git',
+      expect.any(String),
+      ['--depth', '1', '--branch', FULL_SHA]
+    );
+    expect(execFileMock).not.toHaveBeenCalled();
   });
 });
 

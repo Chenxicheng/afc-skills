@@ -65,70 +65,38 @@ import {
 const renamed = { private: false, fullName: 'new-owner/new-repo' };
 
 describe('withCanonicalGitHubRepo', () => {
-  it('rewrites a renamed repo and keeps ref, subpath, and skill filter', () => {
-    const parsed = parseSource('https://github.com/old-owner/old-repo/tree/v1/skills/a');
-    expect(withCanonicalGitHubRepo(parsed, renamed.fullName)).toEqual({
-      type: 'github',
-      url: 'https://github.com/new-owner/new-repo.git',
+  it('preserves pure canonicalization for legacy public source objects', () => {
+    const parsed = {
+      type: 'github' as const,
+      url: 'https://github.com/old-owner/old-repo.git',
       ref: 'v1',
       subpath: 'skills/a',
-    });
-
-    const filtered = parseSource('old-owner/old-repo@my-skill');
-    expect(withCanonicalGitHubRepo(filtered, renamed.fullName)).toMatchObject({
-      url: 'https://github.com/new-owner/new-repo.git',
       skillFilter: 'my-skill',
+    };
+    expect(withCanonicalGitHubRepo(parsed, renamed.fullName)).toEqual({
+      ...parsed,
+      url: 'https://github.com/new-owner/new-repo.git',
     });
-  });
-
-  it('keeps the source when the name is current or unknown', () => {
-    const parsed = parseSource('new-owner/new-repo');
-    expect(withCanonicalGitHubRepo(parsed, renamed.fullName)).toBe(parsed);
     expect(withCanonicalGitHubRepo(parsed, null)).toBe(parsed);
   });
-
-  it('never rewrites non-GitHub.com sources', () => {
-    const gitlab = parseSource('https://gitlab.com/old-owner/old-repo');
-    expect(withCanonicalGitHubRepo(gitlab, renamed.fullName)).toBe(gitlab);
-    const enterprise = parseSource('old-owner/old-repo', { githubHost: 'ghe.example.com' });
-    expect(withCanonicalGitHubRepo(enterprise, renamed.fullName)).toBe(enterprise);
+  it('never rewrites enterprise or local sources to public GitHub', () => {
+    for (const input of ['old-owner/old-repo', './skills']) {
+      const parsed = parseSource(input);
+      expect(withCanonicalGitHubRepo(parsed, renamed.fullName)).toBe(parsed);
+    }
   });
 });
-
 describe('fetchGitHubRepoInfo', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('returns the canonical name GitHub reports', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ private: false, full_name: 'new-owner/new-repo' }))
-      );
-    vi.stubGlobal('fetch', fetchMock);
-    await expect(fetchGitHubRepoInfo('old-owner', 'old-repo')).resolves.toEqual(renamed);
-    expect(fetchMock).toHaveBeenCalledWith('https://api.github.com/repos/old-owner/old-repo');
-  });
-
-  it('returns null when the repo is not visible', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 404 })));
-    await expect(fetchGitHubRepoInfo('old-owner', 'old-repo')).resolves.toBeNull();
-  });
-
-  it('ignores a malformed full_name', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify({ private: true, full_name: '../x' })))
-    );
-    await expect(fetchGitHubRepoInfo('old-owner', 'old-repo')).resolves.toEqual({
-      private: true,
-      fullName: null,
-    });
+  afterEach(() => vi.unstubAllGlobals());
+  it('does not transmit internal names to query public canonical names', async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal('fetch', fetch);
+    expect(await fetchGitHubRepoInfo('old-owner', 'old-repo')).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
 
-describe('following a renamed GitHub repo', () => {
+describe('enterprise source identity', () => {
   let base: string;
   let origCwd: string;
 
@@ -149,7 +117,7 @@ describe('following a renamed GitHub repo', () => {
       'utf-8'
     );
     vi.mocked(cloneRepo).mockResolvedValue(repo);
-    vi.mocked(lookupGitHubRepo).mockResolvedValue(renamed);
+    vi.mocked(lookupGitHubRepo).mockResolvedValue(null);
   }
 
   afterEach(async () => {
@@ -159,7 +127,7 @@ describe('following a renamed GitHub repo', () => {
     vi.mocked(track).mockClear();
   });
 
-  it('locks and reports the canonical owner/repo', async () => {
+  it('locks the original corporate URL without public canonicalization', async () => {
     await makeRepo();
     const project = join(base, 'project');
     await mkdir(project, { recursive: true });
@@ -172,14 +140,16 @@ describe('following a renamed GitHub repo', () => {
     });
 
     const lock = JSON.parse(await readFile(join(project, 'skills-lock.json'), 'utf-8'));
-    expect(lock.skills['renamed-skill'].source).toBe('new-owner/new-repo');
-    expect(track).toHaveBeenCalledWith(expect.objectContaining({ source: 'new-owner/new-repo' }));
+    expect(lock.skills['renamed-skill'].source).toBe(
+      'https://code.sdsdev.co.kr/old-owner/old-repo.git'
+    );
+    expect(track).not.toHaveBeenCalled();
   });
 
-  it('reports the canonical source from the API', async () => {
+  it('reports the corporate source from the API', async () => {
     await makeRepo();
     const handle = await resolveSource('old-owner/old-repo', { cwd: base });
-    expect(handle.source.url).toBe('https://github.com/new-owner/new-repo.git');
+    expect(handle.source.url).toBe('https://code.sdsdev.co.kr/old-owner/old-repo.git');
     await handle.dispose();
   });
 });

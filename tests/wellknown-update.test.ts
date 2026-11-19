@@ -10,7 +10,7 @@ import {
   type WellKnownSkill,
 } from '../src/providers/index.ts';
 
-const BASE_URL = 'https://skills.example.com/p/testpack';
+const BASE_URL = 'https://code.sdsdev.co.kr/p/testpack';
 
 const DIGEST_A = `sha256:${'a'.repeat(64)}`;
 const DIGEST_B = `sha256:${'b'.repeat(64)}`;

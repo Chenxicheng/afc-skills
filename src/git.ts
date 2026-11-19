@@ -1,3 +1,4 @@
+import { assertIntranetUrl, isIntranetMode } from './intranet.ts';
 import { simpleGit } from 'simple-git';
 import { join, normalize, resolve, sep } from 'path';
 import { mkdtemp, mkdir, rm } from 'fs/promises';
@@ -8,7 +9,7 @@ import { diagnostics } from './diagnostics.ts';
 import { isGitHubHost } from './github-host.ts';
 
 const DEFAULT_CLONE_TIMEOUT_MS = 300_000; // 5 minutes
-const ALLOWED_GIT_PROTOCOLS = 'https:http:ssh:git:file';
+const ALLOWED_GIT_PROTOCOLS = 'https:ssh:file';
 const CLONE_TIMEOUT_MS = (() => {
   const raw = process.env.SKILLS_CLONE_TIMEOUT_MS;
   if (!raw) return DEFAULT_CLONE_TIMEOUT_MS;
@@ -194,6 +195,9 @@ function createGitClient(extraEnv?: NodeJS.ProcessEnv) {
       'filter.lfs.clean=',
       'filter.lfs.process=',
       'core.longpaths=true',
+      'http.followRedirects=false',
+      'submodule.recurse=false',
+      'fetch.recurseSubmodules=false',
     ],
     // simple-git v3.36+ rejects all `filter.*` configuration by default.
     // These values are hard-coded above and only disable the LFS filter for
@@ -250,6 +254,8 @@ async function resetTempDir(dir: string): Promise<void> {
 }
 
 async function initializeSubmodules(repoDir: string, extraEnv?: NodeJS.ProcessEnv): Promise<void> {
+  // Recursive submodules can point to arbitrary hosts, including nested modules.
+  if (isIntranetMode()) return;
   try {
     const git = createGitClient(extraEnv);
     await git.cwd(repoDir);
@@ -262,6 +268,8 @@ async function initializeSubmodules(repoDir: string, extraEnv?: NodeJS.ProcessEn
 }
 
 async function tryGhClone(repo: GitHubRepoInfo, tempDir: string, ref?: string): Promise<boolean> {
+  // Avoid gh rewriting host/protocol or using a public account implicitly.
+  if (isIntranetMode()) return false;
   let cloneTarget = repo.slug;
   const host = repo.sshUrl.match(/^git@([^:]+):/)?.[1] || 'github.com';
 
@@ -299,6 +307,7 @@ function authError(url: string, repo: GitHubRepoInfo | null, message: string, ca
 }
 
 export async function cloneRepo(url: string, ref?: string): Promise<string> {
+  assertIntranetUrl(url, true);
   if (/^ext::/i.test(url)) {
     throw diagnostics.SKILLS_UNSUPPORTED_GIT_TRANSPORT({ transport: 'ext' });
   }

@@ -167,7 +167,7 @@ describe('WellKnownProvider', () => {
       vi.stubEnv('INSTALL_INTERNAL_SKILLS', '');
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               {
@@ -197,21 +197,21 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      const defaultSkills = await provider.fetchAllSkills('https://example.com');
+      const defaultSkills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(defaultSkills.map((skill) => skill.installName)).toEqual(['public-skill']);
       expect(
         fetchSpy.mock.calls.some(([url]) => String(url).endsWith('/references/private.md'))
       ).toBe(false);
 
       vi.stubEnv('INSTALL_INTERNAL_SKILLS', '1');
-      const envEnabledSkills = await provider.fetchAllSkills('https://example.com');
+      const envEnabledSkills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(envEnabledSkills.map((skill) => skill.installName)).toEqual([
         'public-skill',
         'internal-skill',
       ]);
 
       vi.stubEnv('INSTALL_INTERNAL_SKILLS', '');
-      const explicitlyIncludedSkills = await provider.fetchAllSkills('https://example.com', {
+      const explicitlyIncludedSkills = await provider.fetchAllSkills('https://code.sdsdev.co.kr', {
         includeInternal: true,
       });
       expect(explicitlyIncludedSkills.map((skill) => skill.installName)).toEqual([
@@ -224,7 +224,7 @@ describe('WellKnownProvider', () => {
       vi.stubEnv('INSTALL_INTERNAL_SKILLS', '');
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               { name: 'public-skill', description: 'Public skill.', files: ['SKILL.md'] },
@@ -243,7 +243,7 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://example.com');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(skills.map((skill) => skill.installName)).toEqual(['public-skill']);
     });
 
@@ -255,7 +255,9 @@ describe('WellKnownProvider', () => {
         throw signal.reason;
       });
 
-      await expect(provider.fetchAllSkills('https://example.com/download')).resolves.toEqual([]);
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr/download')).resolves.toEqual(
+        []
+      );
       expect(timeoutSpy).toHaveBeenCalledTimes(1);
       expect(fetchSpy).toHaveBeenCalled();
     });
@@ -263,7 +265,7 @@ describe('WellKnownProvider', () => {
     it('keeps supporting legacy files[] indexes', async () => {
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               {
@@ -274,18 +276,19 @@ describe('WellKnownProvider', () => {
             ],
           });
         }
-        if (href === 'https://example.com/.well-known/agent-skills/legacy-skill/SKILL.md') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/legacy-skill/SKILL.md') {
           return response('---\nname: legacy-skill\ndescription: Legacy skill.\n---\n# Legacy');
         }
         if (
-          href === 'https://example.com/.well-known/agent-skills/legacy-skill/references/README.md'
+          href ===
+          'https://code.sdsdev.co.kr/.well-known/agent-skills/legacy-skill/references/README.md'
         ) {
           return response('Reference');
         }
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://example.com');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.installName).toBe('legacy-skill');
       expect(skills[0]!.files.has('references/README.md')).toBe(true);
@@ -296,7 +299,7 @@ describe('WellKnownProvider', () => {
       const reference = new Uint8Array([0, 127, 128, 255]);
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               {
@@ -312,7 +315,7 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.discoverSkills('https://example.com');
+      const skills = await provider.discoverSkills('https://code.sdsdev.co.kr');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.name).toBe('Legacy Alias');
       expect(skills[0]!.filePaths).toEqual(['SKILL.md', 'references/example.bin']);
@@ -331,7 +334,7 @@ describe('WellKnownProvider', () => {
     it.each([404, 429, 500])('rejects incomplete legacy skills after HTTP %i', async (status) => {
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               {
@@ -351,10 +354,10 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      await expect(provider.fetchAllSkills('https://example.com')).rejects.toThrow(
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr')).rejects.toThrow(
         `references/README.md" for skill "legacy-skill" (HTTP ${status})`
       );
-      await expect(provider.fetchSkill('https://example.com')).rejects.toThrow(
+      await expect(provider.fetchSkill('https://code.sdsdev.co.kr')).rejects.toThrow(
         `references/README.md" for skill "legacy-skill" (HTTP ${status})`
       );
     });
@@ -371,7 +374,7 @@ describe('WellKnownProvider', () => {
       });
 
       await expect(
-        provider.fetchSkillByEntry('https://example.com', {
+        provider.fetchSkillByEntry('https://code.sdsdev.co.kr', {
           name: 'legacy-skill',
           description: 'Legacy skill.',
           files: ['SKILL.md', 'references/README.md'],
@@ -379,38 +382,38 @@ describe('WellKnownProvider', () => {
       ).rejects.toThrow('Failed to download "references/README.md" for skill "legacy-skill".');
     });
 
-    it('keeps supporting path-relative legacy indexes like code.claude.com/docs', async () => {
+    it('keeps supporting path-relative legacy indexes like code.sdsdev.co.kr/docs', async () => {
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://code.claude.com/docs/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/docs/.well-known/agent-skills/index.json') {
           return response('not found', { status: 404 });
         }
-        if (href === 'https://code.claude.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response('not found', { status: 404 });
         }
-        if (href === 'https://code.claude.com/docs/.well-known/skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/docs/.well-known/skills/index.json') {
           return response({
             skills: [{ name: 'claude', description: 'Claude Code.', files: ['SKILL.md'] }],
           });
         }
-        if (href === 'https://code.claude.com/docs/.well-known/skills/claude/SKILL.md') {
+        if (href === 'https://code.sdsdev.co.kr/docs/.well-known/skills/claude/SKILL.md') {
           return response('---\nname: claude\ndescription: Claude Code.\n---\n# Claude');
         }
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://code.claude.com/docs');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr/docs');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.installName).toBe('claude');
       expect(skills[0]!.sourceUrl).toBe(
-        'https://code.claude.com/docs/.well-known/skills/claude/SKILL.md'
+        'https://code.sdsdev.co.kr/docs/.well-known/skills/claude/SKILL.md'
       );
     });
 
     it('fails instead of falling back to the root index when a scoped path has no index', async () => {
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               { name: 'alpha', description: 'Alpha skill.', files: ['SKILL.md'] },
@@ -421,10 +424,10 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      await expect(provider.fetchAllSkills('https://example.com/s/alpha')).rejects.toThrow(
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr/s/alpha')).rejects.toThrow(
         WellKnownScopeNotFoundError
       );
-      await expect(provider.fetchAllSkills('https://example.com/s/alpha')).rejects.toThrow(
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr/s/alpha')).rejects.toThrow(
         /\/s\/alpha/
       );
     });
@@ -432,10 +435,10 @@ describe('WellKnownProvider', () => {
     it('fails when the scoped index exists but lists no skills', async () => {
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/s/alpha/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/s/alpha/.well-known/agent-skills/index.json') {
           return response({ skills: [] });
         }
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               { name: 'alpha', description: 'Alpha skill.', files: ['SKILL.md'] },
@@ -446,7 +449,7 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      await expect(provider.fetchAllSkills('https://example.com/s/alpha')).rejects.toThrow(
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr/s/alpha')).rejects.toThrow(
         WellKnownScopeNotFoundError
       );
     });
@@ -454,15 +457,15 @@ describe('WellKnownProvider', () => {
     it('uses the scoped index without consulting the root index when the scope resolves', async () => {
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/s/alpha/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/s/alpha/.well-known/agent-skills/index.json') {
           return response({
             skills: [{ name: 'alpha', description: 'Alpha skill.', files: ['SKILL.md'] }],
           });
         }
-        if (href === 'https://example.com/s/alpha/.well-known/agent-skills/alpha/SKILL.md') {
+        if (href === 'https://code.sdsdev.co.kr/s/alpha/.well-known/agent-skills/alpha/SKILL.md') {
           return response('---\nname: alpha\ndescription: Alpha skill.\n---\n# Alpha');
         }
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             skills: [
               { name: 'alpha', description: 'Alpha skill.', files: ['SKILL.md'] },
@@ -473,7 +476,7 @@ describe('WellKnownProvider', () => {
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://example.com/s/alpha');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr/s/alpha');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.installName).toBe('alpha');
     });
@@ -483,7 +486,9 @@ describe('WellKnownProvider', () => {
         response('not found', { status: 404 })
       );
 
-      await expect(provider.fetchAllSkills('https://example.com/s/alpha')).resolves.toEqual([]);
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr/s/alpha')).resolves.toEqual(
+        []
+      );
     });
 
     it('supports v0.2.0 skill-md entries with relative URL resolution and digest checks', async () => {
@@ -491,7 +496,7 @@ describe('WellKnownProvider', () => {
 
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             $schema: SCHEMA_V2,
             skills: [
@@ -505,17 +510,17 @@ describe('WellKnownProvider', () => {
             ],
           });
         }
-        if (href === 'https://example.com/.well-known/agent-skills/code-review/SKILL.md') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/code-review/SKILL.md') {
           return response(skillMd, { headers: { 'content-type': 'text/markdown' } });
         }
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://example.com');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.installName).toBe('code-review');
       expect(skills[0]!.sourceUrl).toBe(
-        'https://example.com/.well-known/agent-skills/code-review/SKILL.md'
+        'https://code.sdsdev.co.kr/.well-known/agent-skills/code-review/SKILL.md'
       );
       expect(skills[0]!.files.get('SKILL.md')).toBe(skillMd);
     });
@@ -525,7 +530,7 @@ describe('WellKnownProvider', () => {
 
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             $schema: SCHEMA_V2,
             skills: [
@@ -539,13 +544,13 @@ describe('WellKnownProvider', () => {
             ],
           });
         }
-        if (href === 'https://example.com/skills/code-review/SKILL.md') {
+        if (href === 'https://code.sdsdev.co.kr/skills/code-review/SKILL.md') {
           return response(skillMd);
         }
         return response('not found', { status: 404 });
       });
 
-      await expect(provider.fetchAllSkills('https://example.com')).rejects.toThrow(
+      await expect(provider.fetchAllSkills('https://code.sdsdev.co.kr')).rejects.toThrow(
         /Digest mismatch for skill 'code-review'/
       );
     });
@@ -558,7 +563,7 @@ describe('WellKnownProvider', () => {
 
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             $schema: SCHEMA_V2,
             skills: [
@@ -572,13 +577,13 @@ describe('WellKnownProvider', () => {
             ],
           });
         }
-        if (href === 'https://example.com/downloads/archive-skill.tar.gz') {
+        if (href === 'https://code.sdsdev.co.kr/downloads/archive-skill.tar.gz') {
           return response(archive, { headers: { 'content-type': 'application/gzip' } });
         }
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://example.com');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.installName).toBe('archive-skill');
       expect(skills[0]!.files.has('SKILL.md')).toBe(true);
@@ -599,7 +604,7 @@ describe('WellKnownProvider', () => {
 
       vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
         const href = String(url);
-        if (href === 'https://example.com/.well-known/agent-skills/index.json') {
+        if (href === 'https://code.sdsdev.co.kr/.well-known/agent-skills/index.json') {
           return response({
             $schema: SCHEMA_V2,
             skills: [
@@ -613,17 +618,48 @@ describe('WellKnownProvider', () => {
             ],
           });
         }
-        if (href === 'https://example.com/downloads/zip-skill.zip') {
+        if (href === 'https://code.sdsdev.co.kr/downloads/zip-skill.zip') {
           return response(archive, { headers: { 'content-type': 'application/zip' } });
         }
         return response('not found', { status: 404 });
       });
 
-      const skills = await provider.fetchAllSkills('https://example.com');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(skills).toHaveLength(1);
       expect(skills[0]!.installName).toBe('zip-skill');
       expect(skills[0]!.files.has('SKILL.md')).toBe(true);
       expect(skills[0]!.files.has('references/README.md')).toBe(true);
+    });
+
+    it('rejects external artifact URLs from an internal discovery index without requesting them', async () => {
+      const foreignArtifact = 'https://evil.example/skill.md';
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+        expect(String(url)).not.toBe(foreignArtifact);
+        return response({
+          $schema: SCHEMA_V2,
+          skills: [
+            {
+              name: 'external',
+              type: 'skill-md',
+              description: 'Unsafe outbound target',
+              url: foreignArtifact,
+              digest: digest('irrelevant'),
+            },
+          ],
+        });
+      });
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
+      expect(skills).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(
+        fetchSpy.mock.calls.every(([url]) => new URL(String(url)).hostname === 'code.sdsdev.co.kr')
+      ).toBe(true);
+    });
+
+    it('does not request external discovery indexes', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+      expect(await provider.fetchAllSkills('https://evil.example')).toEqual([]);
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
 
     it('does not process unknown schemas', async () => {
@@ -634,7 +670,7 @@ describe('WellKnownProvider', () => {
         })
       );
 
-      const skills = await provider.fetchAllSkills('https://example.com');
+      const skills = await provider.fetchAllSkills('https://code.sdsdev.co.kr');
       expect(skills).toHaveLength(0);
     });
   });
@@ -645,29 +681,28 @@ describe('parseSource with well-known URLs', async () => {
   const { parseSource } = await import('../src/source-parser.ts');
 
   it('should parse arbitrary URL as well-known type', () => {
-    const result = parseSource('https://example.com');
+    const result = parseSource('https://code.sdsdev.co.kr');
     expect(result.type).toBe('well-known');
-    expect(result.url).toBe('https://example.com');
+    expect(result.url).toBe('https://code.sdsdev.co.kr');
   });
 
   it('should parse URL with path as well-known type', () => {
-    const result = parseSource('https://mintlify.com/docs');
+    const result = parseSource('https://code.sdsdev.co.kr/docs');
     expect(result.type).toBe('well-known');
-    expect(result.url).toBe('https://mintlify.com/docs');
+    expect(result.url).toBe('https://code.sdsdev.co.kr/docs');
   });
 
   it('should not parse GitHub URL as well-known', () => {
-    const result = parseSource('https://github.com/owner/repo');
-    expect(result.type).toBe('github');
+    expect(() => parseSource('https://github.com/owner/repo')).toThrow(/intranet-only/);
   });
 
   it('should not parse .git URL as well-known', () => {
-    const result = parseSource('https://git.example.com/owner/repo.git');
+    const result = parseSource('https://code.sdsdev.co.kr/owner/repo.git');
     expect(result.type).toBe('git');
   });
 
   it('should parse direct skill.md URL as well-known (no more direct-url type)', () => {
-    const result = parseSource('https://docs.example.com/skill.md');
+    const result = parseSource('https://code.sdsdev.co.kr/skill.md');
     expect(result.type).toBe('well-known');
   });
 });

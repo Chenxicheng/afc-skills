@@ -23,7 +23,7 @@ describe('parseSkillsField', () => {
       [
         'owner/repo@one',
         { source: 'owner/repo', ref: 'v1', skills: ['two'] },
-        'https://gitlab.com/group/repo/-/tree/main/skills',
+        'https://code.sdsdev.co.kr/group/repo/tree/main/skills',
       ],
       '.'
     );
@@ -31,14 +31,14 @@ describe('parseSkillsField', () => {
     expect(remote).toEqual([
       {
         parsed: expect.objectContaining({
-          type: 'github',
-          url: 'https://github.com/owner/repo.git',
+          type: 'git',
+          url: 'https://code.sdsdev.co.kr/owner/repo.git',
         }),
         skills: ['one'],
       },
-      { parsed: expect.objectContaining({ type: 'github', ref: 'v1' }), skills: ['two'] },
+      { parsed: expect.objectContaining({ type: 'git', ref: 'v1' }), skills: ['two'] },
       {
-        parsed: expect.objectContaining({ type: 'gitlab', ref: 'main', subpath: 'skills' }),
+        parsed: expect.objectContaining({ type: 'git', ref: 'main', subpath: 'skills' }),
         skills: [],
       },
     ]);
@@ -46,12 +46,12 @@ describe('parseSkillsField', () => {
 
   it('rejects sources that are not git-hosted', () => {
     expect(
-      parseSkillsField(['./local', 'https://example.com/skills'], 'my-pack').errors.map(
+      parseSkillsField(['./local', 'https://code.sdsdev.co.kr/catalog'], 'my-pack').errors.map(
         (e) => e.message
       )
     ).toEqual([
       'my-pack: "./local" is not a git source',
-      'my-pack: "https://example.com/skills" is not a git source',
+      'my-pack: "https://code.sdsdev.co.kr/catalog" is not a git source',
     ]);
   });
 
@@ -60,13 +60,13 @@ describe('parseSkillsField', () => {
       parseSkillsField(
         [
           { source: 'owner/repo#v1', ref: 'v2' },
-          { source: 'https://github.com/o/r/tree/main/x', ref: 'v2' },
+          { source: 'https://code.sdsdev.co.kr/o/r/tree/main/x', ref: 'v2' },
         ],
         '.'
       ).errors.map((e) => e.message)
     ).toEqual([
       '.: "owner/repo#v1" already has a ref; remove "ref"',
-      '.: "https://github.com/o/r/tree/main/x" already has a ref; remove "ref"',
+      '.: "https://code.sdsdev.co.kr/o/r/tree/main/x" already has a ref; remove "ref"',
     ]);
   });
 

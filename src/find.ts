@@ -1,3 +1,4 @@
+import { isIntranetMode } from './intranet.ts';
 import * as readline from 'readline';
 import type { Diagnostic } from 'nostics';
 import { runAdd, parseAddOptions } from './add.ts';
@@ -64,6 +65,7 @@ export function parseFindOptions(args: string[]): ParseFindOptionsResult {
 
 // Search via API
 export async function searchSkillsAPI(query: string, owner?: string): Promise<SearchSkill[]> {
+  if (isIntranetMode()) return [];
   try {
     const params = new URLSearchParams({ q: query });
     if (owner) params.set('owner', owner);
@@ -354,6 +356,12 @@ async function isRepoPublic(owner: string, repo: string): Promise<boolean> {
 }
 
 export async function runFind(args: string[]): Promise<void> {
+  if (isIntranetMode()) {
+    console.log(
+      'Public skill search is disabled in this intranet build. Use afc-skills add <organization/repository> --list to list skills in an internal repository.'
+    );
+    return;
+  }
   const { query, options: findOptions, errors } = parseFindOptions(args);
   const owner = findOptions.owner;
   const isNonInteractive = !process.stdin.isTTY;

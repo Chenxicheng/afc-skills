@@ -1,5 +1,7 @@
 # afc-skills
 
+> 企业内网版：默认使用 `code.sdsdev.co.kr`，公共搜索、遥测和外网来源已禁用。见[内网使用说明](docs/intranet.md)。
+
 A fork of [vercel-labs/skills](https://github.com/vercel-labs/skills), with aipro support.
 
 ## Use this fork
@@ -45,6 +47,7 @@ Agent skills are reusable instructions that teach coding agents how to perform t
 from reviewing code to working with a library. Discover skills at [skills.sh](https://skills.sh).
 
 <!-- agent-list:start -->
+
 Supports **OpenCode**, **Claude Code**, **Codex**, **Cursor**, and [76 more](docs/agents.md).
 <!-- agent-list:end -->
 
@@ -136,11 +139,11 @@ See the [experimental commands reference](docs/commands.md#experimental-commands
 
 Test vectors:
 
-| Files                                        | `computedHash`                                                     |
-| -------------------------------------------- | ------------------------------------------------------------------ |
-| none                                         | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| `SKILL.md` = `# hi\n`                         | `93c36952d8843b33e68ae970ebabcc03e1687c9bb0dd1ecaf357060318952f55` |
-| `SKILL.md` = `a\n`, `docs/b.md` = `b\n`        | `b22c4d22aa319d2924312fa18fcbfedc88fa89c74dbd8f298c683e1caf7b7f24` |
+| Files                                   | `computedHash`                                                     |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| none                                    | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `SKILL.md` = `# hi\n`                   | `93c36952d8843b33e68ae970ebabcc03e1687c9bb0dd1ecaf357060318952f55` |
+| `SKILL.md` = `a\n`, `docs/b.md` = `b\n` | `b22c4d22aa319d2924312fa18fcbfedc88fa89c74dbd8f298c683e1caf7b7f24` |
 
 The last vector equals `printf 'SKILL.md\0002\000a\ndocs/b.md\0002\000b\n' | sha256sum`.
 

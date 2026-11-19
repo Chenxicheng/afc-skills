@@ -10,7 +10,7 @@ const repoPkg = JSON.parse(
 ) as { version: string; dependencies: Record<string, string> };
 
 describe('packed package', () => {
-  it.skipIf(!inject('tarball'))('ships only the published files', async () => {
+  it('ships only the published files', async () => {
     const files: string[] = [];
     await tar.t({ file: inject('tarball')!, onReadEntry: (e) => files.push(e.path) });
 

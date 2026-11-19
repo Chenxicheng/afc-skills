@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
 import { delimiter, dirname, join } from 'node:path';
 import * as tar from 'tar';
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
-import { Sandbox, entries, readSkill } from './sandbox.ts';
+import { Sandbox, entries, readSkill } from '../sandbox.ts';
 
 /**
  * Notion installs go through the Notion CLI (`ntn api ...`), which needs a logged-in

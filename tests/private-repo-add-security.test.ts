@@ -122,61 +122,48 @@ describe('private repository installs', () => {
       readFile(join(project, '.agents', 'skills', 'private-skill', 'SKILL.md'), 'utf-8')
     ).resolves.toContain('private-skill');
     expect(execSync).not.toHaveBeenCalled();
-    expect(execFile).toHaveBeenCalled();
-    for (const [file, args] of vi.mocked(execFile).mock.calls) {
-      expect(file).toBe('gh');
-      expect(args).toContain('api');
-      expect(args).not.toContain('auth');
-      expect(args).not.toContain('token');
-    }
+    expect(execFile).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('does not audit repository or skill names when telemetry is disabled', async () => {
-    await runAdd(['git@github.com:company/private-skills.git'], {
+    await runAdd(['git@code.sdsdev.co.kr:company/private-skills.git'], {
       yes: true,
       agent: ['codex'],
       global: false,
       mode: 'copy',
     });
 
-    const requestedUrls = vi.mocked(globalThis.fetch).mock.calls.map(([input]) => String(input));
-    expect(requestedUrls.some((url) => url.startsWith('https://www.skills.sh/tele/'))).toBe(false);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('does not send identifiers for repositories whose visibility is unknown', async () => {
     delete process.env.DISABLE_TELEMETRY;
 
-    await runAdd(['git@github.com:company/private-skills.git'], {
+    await runAdd(['git@code.sdsdev.co.kr:company/private-skills.git'], {
       yes: true,
       agent: ['codex'],
       global: false,
       mode: 'copy',
     });
 
-    const requestedUrls = vi.mocked(globalThis.fetch).mock.calls.map(([input]) => String(input));
-    expect(requestedUrls.some((url) => url.startsWith('https://www.skills.sh/tele/'))).toBe(false);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
-  it('installs from another Git host and preserves opted-in non-GitHub telemetry', async () => {
+  it('rejects another Git host without cloning, reading credentials, or sending telemetry', async () => {
+    vi.mocked(cloneRepo).mockClear();
     delete process.env.DISABLE_TELEMETRY;
-    const source = 'git@gitlab.com:company/platform/private-skills.git';
-
-    await runAdd([source], {
-      yes: true,
-      agent: ['codex'],
-      global: false,
-      mode: 'copy',
-    });
-
-    expect(cloneRepo).toHaveBeenCalledWith(source, undefined);
     await expect(
-      readFile(join(project, '.agents', 'skills', 'private-skill', 'SKILL.md'), 'utf-8')
-    ).resolves.toContain('private-skill');
-
-    const requestedUrls = vi.mocked(globalThis.fetch).mock.calls.map(([input]) => String(input));
-    expect(requestedUrls.some((url) => url.startsWith('https://www.skills.sh/tele/t?'))).toBe(true);
-    expect(requestedUrls.some((url) => url.startsWith('https://www.skills.sh/tele/audit?'))).toBe(
-      false
-    );
+      runAdd(['git@gitlab.com:company/platform/private-skills.git'], {
+        yes: true,
+        agent: ['codex'],
+        global: false,
+        mode: 'copy',
+      })
+    ).rejects.toThrow();
+    expect(cloneRepo).not.toHaveBeenCalled();
+    expect(execSync).not.toHaveBeenCalled();
+    expect(execFile).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });

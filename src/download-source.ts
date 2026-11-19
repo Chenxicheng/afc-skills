@@ -1,3 +1,4 @@
+import { intranetFetch, isIntranetMode } from './intranet.ts';
 import { createWriteStream, type Stats } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -115,7 +116,7 @@ async function downloadToFile(
   targetFile: string,
   limits: DownloadLimits
 ): Promise<void> {
-  const response = await fetch(url, {
+  const response = await intranetFetch(url, {
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     redirect: 'follow',
   });

@@ -87,100 +87,13 @@ function mockSnapshot(
   );
 }
 
-describe('snapshot content matches the GitHub tree', () => {
-  beforeEach(async () => {
-    const { resetRepoTreeAuthState } = await import('../src/blob.ts');
-    resetRepoTreeAuthState();
-  });
-
+describe('intranet snapshot consistency boundary', () => {
   afterEach(() => vi.unstubAllGlobals());
-
-  it('rejects stale supporting content when SKILL.md is unchanged', async () => {
-    mockSnapshot(
-      [blob(PREFIX + 'SKILL.md', SKILL_MD), blob(PREFIX + 'reference.md', REFERENCE)],
-      [
-        { path: 'SKILL.md', contents: SKILL_MD },
-        { path: 'reference.md', contents: '# Older reference\n' },
-      ]
-    );
+  it('never trusts a remote snapshot, even one claiming matching content', async () => {
+    mockSnapshot([blob(PREFIX + 'SKILL.md', SKILL_MD)], [{ path: 'SKILL.md', contents: SKILL_MD }]);
     const { tryBlobInstall } = await import('../src/blob.ts');
-    await expect(tryBlobInstall(SOURCE)).resolves.toBeNull();
-  });
-
-  it('rejects files retained by a snapshot after they were deleted upstream', async () => {
-    mockSnapshot(
-      [blob(PREFIX + 'SKILL.md', SKILL_MD)],
-      [
-        { path: 'SKILL.md', contents: SKILL_MD },
-        { path: 'removed-reference.md', contents: '# Deleted upstream\n' },
-      ]
-    );
-    const { tryBlobInstall } = await import('../src/blob.ts');
-    await expect(tryBlobInstall(SOURCE)).resolves.toBeNull();
-  });
-
-  it('accepts matching UTF-8 and empty supporting files without cloning', async () => {
-    const unicode = '中文说明 🧩\n';
-    mockSnapshot(
-      [
-        blob(PREFIX + 'SKILL.md', SKILL_MD),
-        blob(PREFIX + 'reference.md', unicode),
-        blob(PREFIX + 'empty.txt', ''),
-      ],
-      [
-        { path: 'SKILL.md', contents: SKILL_MD },
-        { path: 'reference.md', contents: unicode },
-        { path: 'empty.txt', contents: '' },
-      ]
-    );
-    const { tryBlobInstall } = await import('../src/blob.ts');
-    const result = await tryBlobInstall(SOURCE);
-    expect(result?.skills[0]?.files).toHaveLength(3);
-  });
-
-  it('rejects a stale root SKILL.md', async () => {
-    mockSnapshot(
-      [blob('SKILL.md', SKILL_MD), blob('package.json', '{}')],
-      [
-        { path: 'SKILL.md', contents: OLD_SKILL_MD },
-        { path: 'package.json', contents: '{}' },
-      ]
-    );
-    const { tryBlobInstall } = await import('../src/blob.ts');
-    await expect(tryBlobInstall(SOURCE)).resolves.toBeNull();
-  });
-
-  it('validates only the installed SKILL.md for a root skill', async () => {
-    mockSnapshot(
-      [blob('SKILL.md', SKILL_MD), blob('package.json', '{"version":"new"}')],
-      [
-        { path: 'SKILL.md', contents: SKILL_MD },
-        { path: 'package.json', contents: '{"version":"old"}' },
-        { path: 'removed-source.ts', contents: 'unrelated old source' },
-      ]
-    );
-    const { tryBlobInstall } = await import('../src/blob.ts');
-    const result = await tryBlobInstall(SOURCE);
-    expect(result?.skills[0]?.files).toEqual([{ path: 'SKILL.md', contents: SKILL_MD }]);
-  });
-
-  it('falls back when a root snapshot contains no SKILL.md', async () => {
-    mockSnapshot([blob('SKILL.md', SKILL_MD)], [{ path: 'README.md', contents: '# README' }]);
-    const { tryBlobInstall } = await import('../src/blob.ts');
-    await expect(tryBlobInstall(SOURCE)).resolves.toBeNull();
-  });
-
-  it('does not require excluded files that the clone installer omits', async () => {
-    mockSnapshot(
-      [
-        blob(PREFIX + 'SKILL.md', SKILL_MD),
-        blob(PREFIX + 'metadata.json', '{}'),
-        blob(PREFIX + '__pycache__/cache.pyc', 'excluded'),
-      ],
-      [{ path: 'SKILL.md', contents: SKILL_MD }]
-    );
-    const { tryBlobInstall } = await import('../src/blob.ts');
-    await expect(tryBlobInstall(SOURCE)).resolves.not.toBeNull();
+    expect(await tryBlobInstall(SOURCE)).toBeNull();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });
 
@@ -264,7 +177,13 @@ describe('global add and update with a lagging snapshot', () => {
     await runAdd([SOURCE], { global: true, yes: true, agent: ['universal'], mode: 'symlink' });
     const installed = join(testHome, '.agents', 'skills', 'snapshot-test');
     const lock = await readSkillLock();
-    expect(lock.skills['snapshot-test']?.skillFolderHash).toBe(folderHash);
+    const { computeSkillFolderHash } = await import('../src/skill-hash.ts');
+    expect(lock.skills['snapshot-test']?.skillFolderHash).toBe(
+      await computeSkillFolderHash(join(fixture, PREFIX))
+    );
+    expect(lock.skills['snapshot-test']?.sourceUrl).toBe(
+      'https://code.sdsdev.co.kr/vercel-labs/snapshot-test.git'
+    );
     expect(lock.skills['snapshot-test']?.skillPath).toBe(PREFIX + 'SKILL.md');
 
     // Exercise the real update boundary before checking bytes: the old implementation
@@ -275,6 +194,7 @@ describe('global add and update with a lagging snapshot', () => {
     );
     await expect(readFile(join(installed, 'SKILL.md'), 'utf8')).resolves.toBe(SKILL_MD);
     await expect(readFile(join(installed, 'reference.md'), 'utf8')).resolves.toBe(REFERENCE);
-    expect(cloneRepo).toHaveBeenCalledTimes(1);
+    expect(cloneRepo).toHaveBeenCalledTimes(2);
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });

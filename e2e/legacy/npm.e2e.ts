@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { Sandbox, entries, isSymlink, readSkill } from './sandbox.ts';
+import { Sandbox, entries, isSymlink, readSkill } from '../sandbox.ts';
 
 const NPM_FLAGS = ['--no-audit', '--no-fund', '--ignore-scripts'];
 

@@ -67,34 +67,30 @@ describe('isSubpathSafe', () => {
 describe('parseSource rejects traversal in subpaths', () => {
   describe('GitHub tree URLs with path traversal', () => {
     it('rejects .. in GitHub tree URL subpath', () => {
-      expect(() => parseSource('https://github.com/owner/repo/tree/main/../../etc')).toThrow(
+      expect(() => parseSource('https://code.sdsdev.co.kr/owner/repo/tree/main/../../etc')).toThrow(
         'Unsafe subpath'
       );
     });
 
     it('rejects deeply nested traversal', () => {
-      expect(() => parseSource('https://github.com/owner/repo/tree/main/a/b/../../../etc')).toThrow(
-        'Unsafe subpath'
-      );
+      expect(() =>
+        parseSource('https://code.sdsdev.co.kr/owner/repo/tree/main/a/b/../../../etc')
+      ).toThrow('Unsafe subpath');
     });
 
     it('allows valid GitHub tree URL subpath', () => {
-      const result = parseSource('https://github.com/owner/repo/tree/main/skills/my-skill');
+      const result = parseSource('https://code.sdsdev.co.kr/owner/repo/tree/main/skills/my-skill');
       expect(result.subpath).toBe('skills/my-skill');
     });
   });
 
-  describe('GitLab tree URLs with path traversal', () => {
-    it('rejects .. in GitLab tree URL subpath', () => {
-      expect(() => parseSource('https://gitlab.com/owner/repo/-/tree/main/../../etc')).toThrow(
-        'Unsafe subpath'
-      );
-    });
-
-    it('allows valid GitLab tree URL subpath', () => {
-      const result = parseSource('https://gitlab.com/owner/repo/-/tree/main/src/skills');
-      expect(result.subpath).toBe('src/skills');
-    });
+  it('rejects all external GitLab paths before any lookup', () => {
+    expect(() => parseSource('https://gitlab.com/owner/repo/-/tree/main/src/skills')).toThrow(
+      'intranet-only'
+    );
+    expect(() => parseSource('https://gitlab.com/owner/repo/-/tree/main/../../etc')).toThrow(
+      'intranet-only'
+    );
   });
 
   describe('GitHub shorthand with path traversal', () => {
@@ -114,13 +110,13 @@ describe('parseSource rejects traversal in subpaths', () => {
     it('rejects .. in Azure Repos path query', () => {
       expect(() =>
         parseSource('https://dev.azure.com/fabrikam/Fiber/_git/skills?path=../../etc')
-      ).toThrow('Unsafe subpath');
+      ).toThrow('intranet-only');
     });
 
     it('rejects encoded .. in Azure Repos path query', () => {
       expect(() =>
         parseSource('https://dev.azure.com/fabrikam/Fiber/_git/skills?path=%2e%2e/%2e%2e/etc')
-      ).toThrow('Unsafe subpath');
+      ).toThrow('intranet-only');
     });
   });
 });

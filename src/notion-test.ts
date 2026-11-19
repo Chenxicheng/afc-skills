@@ -1,3 +1,4 @@
+import { isIntranetMode, rejectExternalSource } from './intranet.ts';
 import * as p from '@clack/prompts';
 import { pc } from './color.ts';
 import { spawn } from 'node:child_process';
@@ -179,6 +180,7 @@ function debugNtn(args: string[]): void {
 }
 
 export async function runNtnApi(args: string[]): Promise<string> {
+  if (isIntranetMode()) rejectExternalSource();
   debugNtn(args);
   return new Promise((resolve, reject) => {
     const child = spawn('ntn', args, {

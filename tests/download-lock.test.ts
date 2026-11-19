@@ -21,8 +21,8 @@ import { runAdd } from '../src/add.ts';
 import { runUpdate } from '../src/update.ts';
 import { runInstallFromLock } from '../src/install.ts';
 
-const SKILL_URL = 'https://downloads.example.com/skills/alpha.md';
-const ARCHIVE_URL = 'https://downloads.example.com/skills/pack.tgz';
+const SKILL_URL = 'https://code.sdsdev.co.kr/team/skills/raw/main/alpha.md';
+const ARCHIVE_URL = 'https://code.sdsdev.co.kr/team/skills/releases/download/v1/pack.tgz';
 
 function skillMd(name: string, body = name): string {
   return `---\nname: ${name}\ndescription: ${name}\n---\n\n# ${body}\n`;
@@ -154,18 +154,17 @@ describe('direct downloads in the lock', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('does not lock a URL with a query string, which may carry a signature', async () => {
+  it('rejects signed URLs before fetching, installing or writing a lock', async () => {
     const signed = `${SKILL_URL}?x-amz-signature=secret`;
     served.set(signed, skillMd('alpha'));
-    const warnings: string[] = [];
-    vi.spyOn(console, 'warn').mockImplementation((...args) => void warnings.push(args.join(' ')));
-
-    await add(signed);
-
-    expect(installed('alpha')).toContain('# alpha');
+    vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit called');
+    }) as never);
+    await expect(add(signed)).rejects.toThrow('process.exit called');
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(existsSync(join(project, '.agents', 'skills', 'alpha'))).toBe(false);
     expect(existsSync(join(project, 'skills-lock.json'))).toBe(false);
-    expect(warnings.join('\n')).toContain('Not recording alpha in the lock file');
-    expect(warnings.join('\n')).not.toContain('x-amz-signature');
   });
 
   it('locks a global download by its folder hash', async () => {

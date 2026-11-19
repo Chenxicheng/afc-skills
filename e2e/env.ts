@@ -2,8 +2,7 @@
  * Variables a child process may inherit. Everything else is dropped so the CLI
  * cannot see the developer's agent session (CLAUDECODE, AI_AGENT, ...), config
  * overrides (CLAUDE_CONFIG_DIR, CODEX_HOME, XDG_*), or CI markers that switch
- * defaults such as --frozen-lockfile. Only reachability (PATH, proxies, CAs) and
- * GitHub credentials (to avoid anonymous rate limits) pass through.
+ * defaults such as --frozen-lockfile. Only reachability (PATH, proxies, CAs) pass through. Public GitHub tokens are never inherited.
  */
 const PASSTHROUGH = [
   'PATH',
@@ -28,8 +27,6 @@ const PASSTHROUGH = [
   'SSL_CERT_DIR',
   'GIT_SSL_CAINFO',
   'npm_config_registry',
-  'GITHUB_TOKEN',
-  'GH_TOKEN',
 ];
 
 export function cleanEnv(extra: Record<string, string | undefined> = {}): NodeJS.ProcessEnv {

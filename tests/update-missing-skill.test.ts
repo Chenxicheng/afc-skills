@@ -30,6 +30,8 @@ describe('update restores locked skills missing from disk', () => {
     git('commit', '-q', '-m', 'skills');
     repoUrl = pathToFileURL(repo).href;
     mkdirSync(join(project, '.claude'), { recursive: true });
+    // Agent detection uses the home directory, not only project install directories.
+    mkdirSync(join(root, 'home', '.claude'), { recursive: true });
   });
 
   afterEach(() => {
@@ -40,7 +42,7 @@ describe('update restores locked skills missing from disk', () => {
   const skillDir = () => join(project, '.claude', 'skills', 'alpha');
   const add = () =>
     runCli(['add', repoUrl, '--skill', 'alpha', '-a', 'claude-code', '-y'], project);
-  const update = () => runCli(['update', '-y'], project);
+  const update = () => runCli(['update', '-y'], project, { HOME: join(root, 'home') });
 
   it('reinstalls a project skill whose folder was deleted', () => {
     expect(add().exitCode).toBe(0);

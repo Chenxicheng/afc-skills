@@ -50,7 +50,7 @@ description: A skill served as a bare markdown download
     );
     mockFetchFile(skillFile);
 
-    const downloaded = await downloadSource('https://internal.example.com/download');
+    const downloaded = await downloadSource('https://code.sdsdev.co.kr/download');
     const skills = await discoverSkills(downloaded.rootDir);
 
     expect(downloaded.kind).toBe('skill-md');
@@ -82,7 +82,7 @@ description: A skill served from an archive
     await tar.c({ cwd: archiveRoot, gzip, file: archivePath }, ['repo-main']);
     mockFetchFile(archivePath);
 
-    const downloaded = await downloadSource('https://internal.example.com/download');
+    const downloaded = await downloadSource('https://code.sdsdev.co.kr/download');
     const skills = await discoverSkills(downloaded.rootDir);
 
     expect(downloaded.kind).toBe('archive');
@@ -114,7 +114,7 @@ description: A skill served from an archive
       })
     );
 
-    const downloaded = await downloadSource('https://internal.example.com/download', {
+    const downloaded = await downloadSource('https://code.sdsdev.co.kr/download', {
       downloadMaxBytes: 12 * 1024 * 1024,
     });
     const skills = await discoverSkills(downloaded.rootDir);
@@ -142,7 +142,7 @@ description: A skill served from a zip archive
     );
     mockFetchFile(zipPath);
 
-    const downloaded = await downloadSource('https://internal.example.com/download');
+    const downloaded = await downloadSource('https://code.sdsdev.co.kr/download');
     const skills = await discoverSkills(downloaded.rootDir);
 
     expect(downloaded.kind).toBe('archive');
@@ -169,7 +169,7 @@ description: Unsafe archive path
     );
     mockFetchFile(zipPath);
 
-    await expect(downloadSource('https://internal.example.com/download')).rejects.toThrow(
+    await expect(downloadSource('https://code.sdsdev.co.kr/download')).rejects.toThrow(
       'Archive contains unsafe path'
     );
   });
@@ -189,7 +189,7 @@ description: Unsafe archive path
     mockFetchFile(zipPath);
     vi.stubEnv('SKILLS_EXTRACT_MAX_FILES', '1');
 
-    await expect(downloadSource('https://internal.example.com/download')).rejects.toThrow(
+    await expect(downloadSource('https://code.sdsdev.co.kr/download')).rejects.toThrow(
       'Archive contains too many files'
     );
   });
@@ -207,7 +207,7 @@ description: Unsafe archive path
 
     let downloadedTempDir: string | undefined;
     try {
-      const downloaded = await downloadSource('https://internal.example.com/download');
+      const downloaded = await downloadSource('https://code.sdsdev.co.kr/download');
       downloadedTempDir = downloaded.tempDir;
       expect.fail('expected archive entry limit error');
     } catch (error) {

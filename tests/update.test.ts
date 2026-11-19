@@ -54,16 +54,18 @@ vi.mock('fs', async (importOriginal) => {
           skills: {
             'skill-a': {
               source: 'owner/repo',
+              sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
               skillPath: 'skills/skill-a/SKILL.md',
-              sourceType: 'github',
+              sourceType: 'git',
               skillFolderHash: 'abc',
               installedAt: '',
               updatedAt: '',
             },
             'skill-b': {
               source: 'owner/repo',
+              sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
               skillPath: 'skills/skill-b/SKILL.md',
-              sourceType: 'github',
+              sourceType: 'git',
               skillFolderHash: 'def',
               installedAt: '',
               updatedAt: '',
@@ -118,6 +120,12 @@ describe('Update Cleanup Unit Tests', () => {
       }))
     );
     acceptAll();
+    vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/repo');
+    vi.mocked(localLock.computeSkillFolderHash).mockResolvedValue('new-hash');
+    vi.mocked(skills.discoverSkills).mockResolvedValue([
+      { name: 'skill-a', path: '/tmp/repo/skills/skill-a', description: 'A', rawContent: '' },
+      { name: 'skill-b', path: '/tmp/repo/skills/skill-b', description: 'B', rawContent: '' },
+    ]);
     // Every locked skill is on disk unless a test says otherwise.
     vi.mocked(installer.listInstalledSkills).mockImplementation(async ({ global } = {}) => {
       const lock = global ? await skillLock.readSkillLock() : await localLock.readLocalLock();
@@ -149,14 +157,16 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'abc',
           },
           'skill-b': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-b/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'def',
           },
         },
@@ -192,14 +202,16 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'abc',
           },
           'skill-b': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-b/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'def',
           },
         },
@@ -231,14 +243,16 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'abc',
           },
           'skill-b': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-b/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'def',
           },
         },
@@ -261,7 +275,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'help-me-read': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'plugins/help-me-read/skills/help-me-read/SKILL.md',
             computedHash: 'old-hash',
           },
@@ -297,7 +312,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'swiftui-expert-skill': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'swiftui-expert-skill/SKILL.md',
             computedHash: 'same-hash',
           },
@@ -339,7 +355,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'same-hash',
           },
@@ -367,13 +384,15 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'hash-a',
           },
           'skill-b': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-b/SKILL.md',
             computedHash: 'hash-b-old',
           },
@@ -409,7 +428,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'old/skill-a/SKILL.md',
             computedHash: 'old-hash',
           },
@@ -438,13 +458,14 @@ describe('Update Cleanup Unit Tests', () => {
       expect(add.installToTargets).not.toHaveBeenCalled();
     });
 
-    it('updates a GitHub skill from its locked path when a same-name mirror exists', async () => {
+    it('refuses an ambiguous enterprise skill when a same-name mirror exists', async () => {
       vi.mocked(localLock.readLocalLock).mockResolvedValue({
         version: 2,
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'old-hash',
           },
@@ -468,12 +489,8 @@ describe('Update Cleanup Unit Tests', () => {
 
       await updateProjectSkills({ yes: true });
 
-      expect(add.installToTargets).toHaveBeenCalledTimes(1);
-      expect(add.installToTargets).toHaveBeenCalledWith(
-        expect.anything(),
-        [expect.objectContaining({ path: '/tmp/repo/skills/skill-a' })],
-        expect.anything()
-      );
+      expect(add.installToTargets).not.toHaveBeenCalled();
+      expect(remove.removeCommand).not.toHaveBeenCalled();
     });
 
     it('does not reinstall an ambiguous exact-path skill from a generic Git source', async () => {
@@ -482,7 +499,7 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceUrl: 'git@example.com:owner/repo.git',
+            sourceUrl: 'git@code.sdsdev.co.kr:owner/repo.git',
             sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'old-hash',
@@ -518,7 +535,7 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceUrl: 'git@example.com:owner/repo.git',
+            sourceUrl: 'git@code.sdsdev.co.kr:owner/repo.git',
             sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'old-hash',
@@ -533,13 +550,13 @@ describe('Update Cleanup Unit Tests', () => {
       expect(add.installToTargets).not.toHaveBeenCalled();
     });
 
-    it('uses sourceUrl for self-hosted GitLab project updates', async () => {
+    it('uses sourceUrl for enterprise GitHub project updates', async () => {
       vi.mocked(localLock.readLocalLock).mockResolvedValue({
         version: 2,
         skills: {
           'skill-a': {
             source: 'acme/skills',
-            sourceUrl: 'https://gitlab.example.com/acme/skills.git',
+            sourceUrl: 'https://code.sdsdev.co.kr/acme/skills.git',
             skillPath: 'plugins/example/skills/skill-a/SKILL.md',
             sourceType: 'git',
             computedHash: 'abc',
@@ -560,7 +577,7 @@ describe('Update Cleanup Unit Tests', () => {
       await updateProjectSkills({ yes: true });
 
       expect(git.cloneRepo).toHaveBeenCalledWith(
-        'https://gitlab.example.com/acme/skills.git',
+        'https://code.sdsdev.co.kr/acme/skills.git',
         undefined
       );
       expect(add.installToTargets).toHaveBeenCalledWith(
@@ -570,13 +587,14 @@ describe('Update Cleanup Unit Tests', () => {
       );
     });
 
-    it('normalizes GitHub shorthand for deletion checks and keeps updates path-targeted', async () => {
+    it('uses the recorded enterprise URL for project deletion and update checks', async () => {
       vi.mocked(localLock.readLocalLock).mockResolvedValue({
         version: 2,
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'plugins/example/skills/skill-a/SKILL.md',
             computedHash: 'abc',
           },
@@ -594,7 +612,10 @@ describe('Update Cleanup Unit Tests', () => {
 
       await updateProjectSkills({ yes: true });
 
-      expect(git.cloneRepo).toHaveBeenCalledWith('https://github.com/owner/repo.git', undefined);
+      expect(git.cloneRepo).toHaveBeenCalledWith(
+        'https://code.sdsdev.co.kr/owner/repo.git',
+        undefined
+      );
       expect(add.installToTargets).toHaveBeenCalledWith(
         expect.anything(),
         [expect.objectContaining({ path: '/tmp/repo/plugins/example/skills/skill-a' })],
@@ -608,7 +629,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'old-hash',
             subagents: ['', 'research'],
@@ -647,7 +669,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             computedHash: 'old-hash',
           },
@@ -677,29 +700,30 @@ describe('Update Cleanup Unit Tests', () => {
       logSpy.mockRestore();
     });
 
-    it('pins public GitHub project updates to github.com when GH_HOST points elsewhere', async () => {
-      vi.stubEnv('GH_HOST', 'github.example.com');
+    it('rejects legacy public project locks without reinterpreting their host', async () => {
+      vi.stubEnv('GH_HOST', 'code.sdsdev.co.kr');
       vi.mocked(localLock.readLocalLock).mockResolvedValue({
         version: 2,
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            skillPath: 'skills/skill-a/SKILL.md',
+            sourceUrl: 'https://github.com/owner/repo.git',
             sourceType: 'github',
-            computedHash: 'abc',
+            skillPath: 'skills/skill-a/SKILL.md',
+            computedHash: 'old',
+            skillFolderHash: 'old',
+            installedAt: '',
+            updatedAt: '',
           },
         },
       });
-
-      vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/repo');
-      vi.mocked(skills.discoverSkills).mockResolvedValue([
-        { name: 'skill-a', path: '/tmp/repo/skills/skill-a', description: 'A', rawContent: '' },
-      ]);
-
+      vi.mocked(git.cloneRepo).mockRejectedValue(new Error('External source blocked'));
       await updateProjectSkills({ yes: true });
-
-      expect(git.cloneRepo).toHaveBeenCalledWith('https://github.com/owner/repo.git', undefined);
-      expect(add.installToTargets).toHaveBeenCalledTimes(1);
+      expect(add.installFetched).not.toHaveBeenCalled();
+      expect(add.installToTargets).not.toHaveBeenCalled();
+      for (const [url] of vi.mocked(git.cloneRepo).mock.calls)
+        expect(url).toBe('https://github.com/owner/repo.git');
+      expect(fetchedParsed()).toEqual([]);
     });
 
     it('does not reinterpret generic git shorthands as GitHub during project update', async () => {
@@ -731,16 +755,18 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'abc',
             installedAt: '',
             updatedAt: '',
           },
           'skill-b': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-b/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'def',
             installedAt: '',
             updatedAt: '',
@@ -748,15 +774,6 @@ describe('Update Cleanup Unit Tests', () => {
         },
       });
 
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [
-          { path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'sha1' },
-          { path: 'skills/skill-a', type: 'tree', sha: 'abc' },
-        ],
-      });
-      vi.mocked(blob.findSkillMdPaths).mockReturnValue(['skills/skill-a/SKILL.md']);
       vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/repo');
       vi.mocked(skills.discoverSkills).mockResolvedValue([
         { name: 'skill-a', path: '/tmp/repo/skills/skill-a', description: 'A', rawContent: '' },
@@ -773,7 +790,7 @@ describe('Update Cleanup Unit Tests', () => {
       );
     });
 
-    it('updates an exact-path global GitHub skill when fallback discovery finds a mirror', async () => {
+    it('refuses ambiguous global enterprise mirrors without deleting either', async () => {
       const oldHash = 'a'.repeat(40);
       const newHash = 'b'.repeat(40);
       vi.mocked(skillLock.readSkillLock).mockResolvedValue({
@@ -781,8 +798,9 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
-            sourceType: 'github',
-            sourceUrl: 'https://github.com/owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo',
             skillPath: 'skills/skill-a/SKILL.md',
             skillFolderHash: oldHash,
             installedAt: '',
@@ -790,7 +808,6 @@ describe('Update Cleanup Unit Tests', () => {
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue(null);
       vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/repo');
       vi.mocked(skills.discoverSkills).mockResolvedValue([
         {
@@ -806,21 +823,12 @@ describe('Update Cleanup Unit Tests', () => {
           rawContent: '',
         },
       ]);
-      vi.mocked(git.getGitTreeHash).mockResolvedValue(newHash);
 
       await updateGlobalSkills({ yes: true });
 
-      expect(git.getGitTreeHash).toHaveBeenCalledWith('/tmp/repo', 'skills/skill-a/SKILL.md');
-      expect(fetchedParsed()).toEqual([
-        expect.objectContaining({
-          parsed: expect.objectContaining({ subpath: 'skills/skill-a' }),
-          skills: ['skill-a'],
-        }),
-      ]);
-      expect(skillLock.addSkillToLock).toHaveBeenCalledWith(
-        'skill-a',
-        expect.objectContaining({ skillFolderHash: newHash })
-      );
+      expect(fetchedParsed()).toEqual([]);
+      expect(add.installFetched).not.toHaveBeenCalled();
+      expect(remove.removeCommand).not.toHaveBeenCalled();
     });
 
     it('reinstalls a relocated global skill even when its content hash is unchanged', async () => {
@@ -830,29 +838,14 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'swiftui-expert-skill': {
             source: 'owner/repo',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'swiftui-expert-skill/SKILL.md',
             skillFolderHash: treeHash,
             installedAt: '',
             updatedAt: '',
           },
         },
-      });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [
-          {
-            path: 'skills/swiftui-expert-skill/SKILL.md',
-            type: 'blob',
-            sha: 'blobsha',
-          },
-          {
-            path: 'skills/swiftui-expert-skill',
-            type: 'tree',
-            sha: treeHash,
-          },
-        ],
       });
       vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/repo');
       vi.mocked(skills.discoverSkills).mockResolvedValue([
@@ -863,19 +856,19 @@ describe('Update Cleanup Unit Tests', () => {
           rawContent: '',
         },
       ]);
-      vi.mocked(git.getGitTreeHash).mockResolvedValue(treeHash);
+      vi.mocked(localLock.computeSkillFolderHash).mockResolvedValue(treeHash);
 
       await updateGlobalSkills({ yes: true });
 
       expect(p.confirm).not.toHaveBeenCalled();
       expect(remove.removeCommand).not.toHaveBeenCalled();
-      expect(git.getGitTreeHash).toHaveBeenCalledWith(
-        '/tmp/repo',
-        'skills/swiftui-expert-skill/SKILL.md'
+      expect(localLock.computeSkillFolderHash).toHaveBeenCalledWith(
+        '/tmp/repo/skills/swiftui-expert-skill'
       );
       expect(fetchedParsed()).toEqual([
         expect.objectContaining({
-          parsed: expect.objectContaining({ subpath: 'skills/swiftui-expert-skill' }),
+          parsed: expect.objectContaining({ url: 'https://code.sdsdev.co.kr/owner/repo.git' }),
+          skills: ['swiftui-expert-skill'],
         }),
       ]);
       expect(skillLock.addSkillToLock).toHaveBeenCalledWith(
@@ -884,14 +877,14 @@ describe('Update Cleanup Unit Tests', () => {
       );
     });
 
-    it('does not report a locked plugin skill as deleted when it exists in the GitHub tree', async () => {
+    it('does not report a locked plugin skill as deleted when full-depth clone discovery finds it', async () => {
       vi.mocked(skillLock.readSkillLock).mockResolvedValue({
         version: 3,
         skills: {
           'help-me-read': {
             source: 'owner/repo',
-            sourceUrl: 'https://github.com/owner/repo.git',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
+            sourceType: 'git',
             skillPath: 'plugins/help-me-read/skills/help-me-read/SKILL.md',
             skillFolderHash: 'deep-tree-sha',
             installedAt: '',
@@ -899,26 +892,17 @@ describe('Update Cleanup Unit Tests', () => {
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [
-          { path: '.claude/skills/shallow/SKILL.md', type: 'blob', sha: 'shallow-blob' },
-          {
-            path: 'plugins/help-me-read/skills/help-me-read/SKILL.md',
-            type: 'blob',
-            sha: 'deep-blob',
-          },
-          {
-            path: 'plugins/help-me-read/skills/help-me-read',
-            type: 'tree',
-            sha: 'deep-tree-sha',
-          },
-        ],
-      });
-      vi.mocked(blob.findSkillMdPaths).mockReturnValue(['.claude/skills/shallow/SKILL.md']);
       vi.mocked(p.confirm).mockResolvedValue(false);
 
+      vi.mocked(skills.discoverSkills).mockResolvedValue([
+        {
+          name: 'help-me-read',
+          path: '/tmp/repo/plugins/help-me-read/skills/help-me-read',
+          description: 'Deep plugin',
+          rawContent: '',
+        },
+      ]);
+      vi.mocked(localLock.computeSkillFolderHash).mockResolvedValue('deep-tree-sha');
       await updateGlobalSkills();
 
       expect(p.confirm).not.toHaveBeenCalled();
@@ -931,18 +915,20 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             ref: 'v1',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'abc',
             installedAt: '',
             updatedAt: '',
           },
           'skill-b': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             ref: 'v2',
             skillPath: 'skills/skill-b/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'def',
             installedAt: '',
             updatedAt: '',
@@ -950,37 +936,35 @@ describe('Update Cleanup Unit Tests', () => {
         },
       });
 
-      // Each ref exposes only its own skill.
-      vi.mocked(blob.fetchRepoTree).mockImplementation(async (_source, ref) => {
-        const isV2 = ref === 'v2';
-        const dir = isV2 ? 'skills/skill-b' : 'skills/skill-a';
-        return {
-          sha: 'rootsha',
-          branch: 'main',
-          tree: [
-            { path: `${dir}/SKILL.md`, type: 'blob', sha: 'blobsha' },
-            { path: dir, type: 'tree', sha: isV2 ? 'def' : 'abc' },
-          ],
-        };
+      // Each ref exposes only its own skill; sharing a checkout would delete the other.
+      vi.mocked(git.cloneRepo).mockImplementation(async (_url, ref) => `/tmp/repo-${ref}`);
+      vi.mocked(skills.discoverSkills).mockImplementation(async (path) => {
+        const name = path.endsWith('v2') ? 'skill-b' : 'skill-a';
+        return [{ name, path: `${path}/skills/${name}`, description: name, rawContent: '' }];
       });
+      vi.mocked(localLock.computeSkillFolderHash).mockImplementation(async (path) =>
+        path.includes('skill-b') ? 'def' : 'abc'
+      );
       vi.mocked(p.confirm).mockResolvedValue(true);
 
       await updateGlobalSkills();
 
       // Before the fix, skill-b was grouped with skill-a by source alone and
       // checked against v1's tree, then reported deleted upstream and removed.
+      expect(git.cloneRepo).toHaveBeenCalledWith('https://code.sdsdev.co.kr/owner/repo.git', 'v1');
+      expect(git.cloneRepo).toHaveBeenCalledWith('https://code.sdsdev.co.kr/owner/repo.git', 'v2');
       expect(p.confirm).not.toHaveBeenCalled();
       expect(remove.removeCommand).not.toHaveBeenCalled();
     });
 
-    it('checks a private GitHub update by cloning when authenticated API access is unavailable', async () => {
+    it('checks a private enterprise update using its recorded clone URL', async () => {
       vi.mocked(skillLock.readSkillLock).mockResolvedValue({
         version: 3,
         skills: {
           'skill-a': {
             source: 'owner/private-repo',
-            sourceUrl: 'https://github.com/owner/private-repo.git',
-            sourceType: 'github',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/private-repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             skillFolderHash: 'old-content-hash',
             installedAt: '',
@@ -988,7 +972,6 @@ describe('Update Cleanup Unit Tests', () => {
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue(null);
       vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/private-repo');
       vi.mocked(skills.discoverSkills).mockResolvedValue([
         {
@@ -1003,7 +986,7 @@ describe('Update Cleanup Unit Tests', () => {
       await updateGlobalSkills({ yes: true });
 
       expect(git.cloneRepo).toHaveBeenCalledWith(
-        'https://github.com/owner/private-repo.git',
+        'https://code.sdsdev.co.kr/owner/private-repo.git',
         undefined
       );
       expect(localLock.computeSkillFolderHash).toHaveBeenCalledWith(
@@ -1017,8 +1000,8 @@ describe('Update Cleanup Unit Tests', () => {
     });
 
     it.each([
-      ['does not report an unchanged Git tree SHA as updated after an API fallback', true, 0],
-      ['reinstalls an unchanged missing skill after an API fallback', false, 1],
+      ['does not report an unchanged enterprise content hash as updated', true, 0],
+      ['reinstalls an unchanged missing enterprise skill', false, 1],
     ])('%s', async (_title, onDisk, installs) => {
       const treeHash = 'a'.repeat(40);
       vi.mocked(skillLock.readSkillLock).mockResolvedValue({
@@ -1026,8 +1009,8 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/private-repo',
-            sourceUrl: 'git@github.com:owner/private-repo.git',
-            sourceType: 'github',
+            sourceUrl: 'git@code.sdsdev.co.kr:owner/private-repo.git',
+            sourceType: 'git',
             skillPath: 'skills/skill-a/SKILL.md',
             skillFolderHash: treeHash,
             installedAt: '',
@@ -1035,7 +1018,6 @@ describe('Update Cleanup Unit Tests', () => {
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue(null);
       vi.mocked(git.cloneRepo).mockResolvedValue('/tmp/private-repo');
       vi.mocked(skills.discoverSkills).mockResolvedValue([
         {
@@ -1045,15 +1027,13 @@ describe('Update Cleanup Unit Tests', () => {
           rawContent: '',
         },
       ]);
-      vi.mocked(git.getGitTreeHash).mockResolvedValue(treeHash);
-      vi.mocked(localLock.computeSkillFolderHash).mockResolvedValue('b'.repeat(64));
+      vi.mocked(localLock.computeSkillFolderHash).mockResolvedValue(treeHash);
       if (!onDisk) vi.mocked(installer.listInstalledSkills).mockResolvedValue([]);
 
       await updateGlobalSkills({ yes: true });
 
-      expect(git.getGitTreeHash).toHaveBeenCalledWith(
-        '/tmp/private-repo',
-        'skills/skill-a/SKILL.md'
+      expect(localLock.computeSkillFolderHash).toHaveBeenCalledWith(
+        '/tmp/private-repo/skills/skill-a'
       );
       expect(add.installFetched).toHaveBeenCalledTimes(installs);
     });
@@ -1103,8 +1083,8 @@ describe('Update Cleanup Unit Tests', () => {
         version: 3,
         skills: {
           'skill-a': {
-            source: 'ssh://git@github.com/owner/repo',
-            sourceUrl: 'ssh://git@github.com/owner/repo',
+            source: 'ssh://git@code.sdsdev.co.kr/owner/repo',
+            sourceUrl: 'ssh://git@code.sdsdev.co.kr/owner/repo',
             skillPath: 'plugins/example/skills/skill-a/SKILL.md',
             sourceType: 'git',
             skillFolderHash: 'old-hash',
@@ -1127,7 +1107,10 @@ describe('Update Cleanup Unit Tests', () => {
 
       await updateGlobalSkills({ yes: true });
 
-      expect(git.cloneRepo).toHaveBeenCalledWith('ssh://git@github.com/owner/repo', undefined);
+      expect(git.cloneRepo).toHaveBeenCalledWith(
+        'ssh://git@code.sdsdev.co.kr/owner/repo',
+        undefined
+      );
       expect(localLock.computeSkillFolderHash).toHaveBeenCalledWith(
         join('/tmp/repo', 'plugins/example/skills/skill-a')
       );
@@ -1145,7 +1128,7 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'acme/skills',
-            sourceUrl: 'https://gitlab.example.com/acme/skills.git',
+            sourceUrl: 'https://code.sdsdev.co.kr/acme/skills.git',
             skillPath: 'skills/skill-a/SKILL.md',
             sourceType: 'git',
             skillFolderHash: 'old-hash',
@@ -1164,67 +1147,51 @@ describe('Update Cleanup Unit Tests', () => {
       await updateGlobalSkills({ yes: true });
 
       expect(git.cloneRepo).toHaveBeenCalledWith(
-        'https://gitlab.example.com/acme/skills.git',
+        'https://code.sdsdev.co.kr/acme/skills.git',
         undefined
       );
       expect(fetchedParsed()).toEqual([
         expect.objectContaining({
-          parsed: expect.objectContaining({ url: 'https://gitlab.example.com/acme/skills.git' }),
+          parsed: expect.objectContaining({ url: 'https://code.sdsdev.co.kr/acme/skills.git' }),
           skills: ['skill-a'],
         }),
       ]);
     });
 
-    it('pins public GitHub global updates to github.com when GH_HOST points elsewhere', async () => {
-      vi.stubEnv('GH_HOST', 'github.example.com');
+    it('rejects legacy public global locks without reinterpreting their host', async () => {
+      vi.stubEnv('GH_HOST', 'code.sdsdev.co.kr');
       vi.mocked(skillLock.readSkillLock).mockResolvedValue({
         version: 3,
         skills: {
           'skill-a': {
             source: 'owner/repo',
             sourceUrl: 'https://github.com/owner/repo.git',
-            skillPath: 'skills/skill-a/SKILL.md',
             sourceType: 'github',
-            skillFolderHash: 'old-hash',
+            skillPath: 'skills/skill-a/SKILL.md',
+            computedHash: 'old',
+            skillFolderHash: 'old',
             installedAt: '',
             updatedAt: '',
           },
         },
       });
-
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [{ path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'new-hash' }],
-      });
-      vi.mocked(blob.findSkillMdPaths).mockReturnValue(['skills/skill-a/SKILL.md']);
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('new-hash');
-
+      vi.mocked(git.cloneRepo).mockRejectedValue(new Error('External source blocked'));
       await updateGlobalSkills({ yes: true });
-
-      expect(fetchedParsed()).toEqual([
-        expect.objectContaining({
-          parsed: expect.objectContaining({
-            type: 'github',
-            url: 'https://github.com/owner/repo.git',
-            subpath: 'skills/skill-a',
-          }),
-        }),
-      ]);
-      expect(skillLock.addSkillToLock).toHaveBeenCalledWith(
-        'skill-a',
-        expect.objectContaining({ skillFolderHash: 'new-hash' })
-      );
+      expect(add.installFetched).not.toHaveBeenCalled();
+      expect(add.installToTargets).not.toHaveBeenCalled();
+      for (const [url] of vi.mocked(git.cloneRepo).mock.calls)
+        expect(url).toBe('https://github.com/owner/repo.git');
+      expect(fetchedParsed()).toEqual([]);
     });
 
     it('keeps GitHub Enterprise updates on their recorded URL and targets one skill', async () => {
-      vi.stubEnv('GH_HOST', 'github.example.com');
+      vi.stubEnv('GH_HOST', 'code.sdsdev.co.kr');
       vi.mocked(skillLock.readSkillLock).mockResolvedValue({
         version: 3,
         skills: {
           'skill-a': {
-            source: 'https://github.example.com/acme/skills.git',
-            sourceUrl: 'https://github.example.com/acme/skills.git',
+            source: 'https://code.sdsdev.co.kr/acme/skills.git',
+            sourceUrl: 'https://code.sdsdev.co.kr/acme/skills.git',
             skillPath: 'skills/skill-a/SKILL.md',
             sourceType: 'git',
             skillFolderHash: 'old-hash',
@@ -1244,7 +1211,7 @@ describe('Update Cleanup Unit Tests', () => {
 
       expect(fetchedParsed()).toEqual([
         expect.objectContaining({
-          parsed: expect.objectContaining({ url: 'https://github.example.com/acme/skills.git' }),
+          parsed: expect.objectContaining({ url: 'https://code.sdsdev.co.kr/acme/skills.git' }),
           skills: ['skill-a'],
         }),
       ]);
@@ -1256,8 +1223,9 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'old-hash',
             ref: 'v2',
             installedAt: '',
@@ -1265,13 +1233,6 @@ describe('Update Cleanup Unit Tests', () => {
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [{ path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'sha1' }],
-      });
-      vi.mocked(blob.findSkillMdPaths).mockReturnValue(['skills/skill-a/SKILL.md']);
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('new-hash');
 
       await updateGlobalSkills({ yes: true });
 
@@ -1286,20 +1247,16 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'same',
             installedAt: '',
             updatedAt: '',
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [{ path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'sha1' }],
-      });
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('same');
+      vi.mocked(localLock.computeSkillFolderHash).mockResolvedValue('same');
       vi.mocked(installer.listInstalledSkills).mockResolvedValue([]);
 
       const result = await updateGlobalSkills({ yes: true });
@@ -1315,8 +1272,9 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'old',
             installedAt: '',
             updatedAt: '',
@@ -1324,12 +1282,6 @@ describe('Update Cleanup Unit Tests', () => {
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [{ path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'sha1' }],
-      });
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('new');
 
       await updateGlobalSkills({ yes: true });
 
@@ -1344,20 +1296,15 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'old',
             installedAt: '',
             updatedAt: '',
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [{ path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'sha1' }],
-      });
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('new');
 
       await updateGlobalSkills({ yes: true });
 
@@ -1371,34 +1318,24 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'old-a',
             installedAt: '',
             updatedAt: '',
           },
           'skill-b': {
             source: 'other/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/other/repo.git',
             skillPath: 'skills/skill-b/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'old-b',
             installedAt: '',
             updatedAt: '',
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockImplementation(async (source) => ({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [
-          {
-            path: source === 'owner/repo' ? 'skills/skill-a/SKILL.md' : 'skills/skill-b/SKILL.md',
-            type: 'blob',
-            sha: 'sha1',
-          },
-        ],
-      }));
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('new-hash');
 
       const result = await updateGlobalSkills({ yes: true });
 
@@ -1417,8 +1354,9 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'abc',
           },
         },
@@ -1461,8 +1399,9 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             computedHash: 'old',
           },
         },
@@ -1485,20 +1424,15 @@ describe('Update Cleanup Unit Tests', () => {
         skills: {
           'skill-a': {
             source: 'owner/repo',
+            sourceUrl: 'https://code.sdsdev.co.kr/owner/repo.git',
             skillPath: 'skills/skill-a/SKILL.md',
-            sourceType: 'github',
+            sourceType: 'git',
             skillFolderHash: 'old',
             installedAt: '',
             updatedAt: '',
           },
         },
       });
-      vi.mocked(blob.fetchRepoTree).mockResolvedValue({
-        sha: 'rootsha',
-        branch: 'main',
-        tree: [{ path: 'skills/skill-a/SKILL.md', type: 'blob', sha: 'sha1' }],
-      });
-      vi.mocked(blob.getSkillFolderHashFromTree).mockReturnValue('new');
 
       await runUpdate(['-g'], 'check');
 

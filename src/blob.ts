@@ -1,3 +1,4 @@
+import { intranetFetch, isIntranetMode } from './intranet.ts';
 /**
  * Blob-based skill download utilities.
  *
@@ -131,7 +132,7 @@ async function fetchTreeBranch(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
+    const response = await intranetFetch(url, {
       headers,
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
     });
@@ -166,6 +167,7 @@ async function fetchTreeWithToken(
   branches: string[],
   getToken: () => string | null
 ): Promise<RepoTree | null> {
+  if (isIntranetMode()) return null;
   const token = getToken();
   if (!token) return null;
   for (const branch of branches) {
@@ -179,6 +181,7 @@ async function fetchTreeWithGitHubCli(
   ownerRepo: string,
   branches: string[]
 ): Promise<RepoTree | null> {
+  if (isIntranetMode()) return null;
   for (const branch of branches) {
     try {
       const endpoint = `repos/${ownerRepo}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
@@ -217,6 +220,7 @@ async function fetchTreeWithAvailableAuth(
   branches: string[],
   getToken?: () => string | null
 ): Promise<RepoTree | null> {
+  if (isIntranetMode()) return null;
   if (getToken) {
     const tree = await fetchTreeWithToken(ownerRepo, branches, getToken);
     if (tree) return tree;
@@ -243,6 +247,7 @@ export async function fetchRepoTree(
   ref?: string,
   getToken?: () => string | null
 ): Promise<RepoTree | null> {
+  if (isIntranetMode()) return null;
   const branches = ref ? [ref] : ['HEAD', 'main', 'master'];
 
   // Fast path: once we've seen a rate limit in this process, don't bother
@@ -439,7 +444,7 @@ async function fetchRawContent(
 ): Promise<string | null> {
   try {
     const url = `https://raw.githubusercontent.com/${ownerRepo}/${branch}/${filePath}`;
-    const response = await fetch(url, {
+    const response = await intranetFetch(url, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
     });
     if (!response.ok) return null;
@@ -480,7 +485,7 @@ async function fetchSkillDownload(
     // Self-hosted repos build their own URL; otherwise fall back to the default.
     const selfHosted = BLOB_ALLOWED_REPOS[source.toLowerCase()]?.downloadUrl(slug);
     const url = selfHosted ?? defaultUrl;
-    const response = await fetch(url, {
+    const response = await intranetFetch(url, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
     });
     if (!response.ok) return null;
@@ -576,6 +581,7 @@ export async function tryBlobInstall(
     includeInternal?: boolean;
   } = {}
 ): Promise<BlobInstallResult | null> {
+  if (isIntranetMode()) return null;
   // Snapshot downloads are keyed only by owner, repository, and skill slug. They
   // are not bound to the requested ref, so using this path for an explicit ref
   // could install different bytes than the tree and frontmatter resolved below.

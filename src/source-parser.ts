@@ -1,3 +1,9 @@
+import {
+  assertIntranetUrl,
+  isIntranetMode,
+  INTRANET_HOST,
+  rejectExternalSource,
+} from './intranet.ts';
 import { isAbsolute, resolve } from 'path';
 import type { ParsedSource } from './types.ts';
 import { diagnostics } from './diagnostics.ts';
@@ -87,6 +93,8 @@ const GITHUB_FULL_NAME = /^[A-Za-z0-9-]+\/(?!\.\.?$)[A-Za-z0-9._-]+$/;
  * exist, is not visible anonymously, or the API is unreachable.
  */
 export async function fetchGitHubRepoInfo(owner: string, repo: string) {
+  // Public visibility lookup is unnecessary and must not disclose internal names.
+  if (isIntranetMode()) return null;
   try {
     const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
     if (!res.ok) {
@@ -475,7 +483,7 @@ function isHostedArtifactUrl(input: string): boolean {
       return true;
     }
 
-    if (host === 'github.com') {
+    if (host === 'github.com' || host === INTRANET_HOST) {
       return /^\/[^/]+\/[^/]+\/(?:archive\/|raw\/|releases\/(?:download\/|latest\/download\/))/.test(
         parsed.pathname
       );
@@ -495,7 +503,7 @@ function isHostedArtifactUrl(input: string): boolean {
  * `githubHost` pins `owner/repo` shorthand to a host regardless of GH_HOST,
  * for inputs known to come from github.com (e.g. a public lock entry).
  */
-export function parseSource(
+function parseSourceUnchecked(
   input: string,
   options: { githubHost?: string; cwd?: string } = {}
 ): ParsedSource {
@@ -518,7 +526,8 @@ export function parseSource(
   input = inputWithoutFragment;
 
   // Resolve source aliases before parsing
-  const alias = SOURCE_ALIASES[input];
+  // Public registry aliases do not identify repositories on the enterprise host.
+  const alias = isIntranetMode() ? undefined : SOURCE_ALIASES[input];
   if (alias) {
     input = alias;
   }
@@ -527,7 +536,10 @@ export function parseSource(
   // Also supports github:owner/repo/subpath and github:owner/repo@skill
   const githubPrefixMatch = input.match(/^github:(.+)$/);
   if (githubPrefixMatch) {
-    return parseSource(appendFragmentRef(githubPrefixMatch[1]!, fragmentRef, fragmentSkillFilter));
+    return parseSource(
+      appendFragmentRef(githubPrefixMatch[1]!, fragmentRef, fragmentSkillFilter),
+      options
+    );
   }
 
   // Prefix shorthand: gitlab:owner/repo -> https://gitlab.com/owner/repo
@@ -768,4 +780,33 @@ function isWellKnownUrl(input: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** Validate before normalization so credentials and foreign hosts cannot disappear. */
+export function parseSource(
+  input: string,
+  options: { githubHost?: string; cwd?: string } = {}
+): ParsedSource {
+  // UNC paths can trigger SMB/NTLM network access on Windows.
+  if (/^[\\/]{2}/.test(input)) rejectExternalSource();
+  if (/^https?:\/\//i.test(input) || input.startsWith('ssh://') || input.startsWith('git@')) {
+    assertIntranetUrl(input.split('#')[0]!, true);
+    // URL() normalizes dot segments; inspect the original path before that happens.
+    const originalPath = input
+      .split(/[?#]/)[0]!
+      .replace(/^[a-z]+:\/\/[^/]+/i, '')
+      .replace(/^git@[^:]+:/, '');
+    let decodedPath = originalPath;
+    try {
+      decodedPath = decodeURIComponent(originalPath);
+    } catch {
+      /* keep the original */
+    }
+    sanitizeSubpath(decodedPath);
+  }
+  const parsed = parseSourceUnchecked(input, options);
+  if (parsed.type === 'local' && /^[\\/]{2}/.test(parsed.localPath ?? parsed.url))
+    rejectExternalSource();
+  if (parsed.type !== 'local') assertIntranetUrl(parsed.url, true);
+  return parsed;
 }

@@ -1,3 +1,4 @@
+import { isIntranetMode } from './intranet.ts';
 import { orderAgentChoices } from './agent-choice-order.ts';
 import * as p from '@clack/prompts';
 import { pc } from './color.ts';
@@ -3408,6 +3409,8 @@ async function promptForFindSkills(
   options?: AddOptions,
   targetAgents?: AgentType[]
 ): Promise<void> {
+  // Never suggest the public skills discovery package in the intranet build.
+  if (isIntranetMode()) return;
   // Skip if already dismissed or not in interactive mode
   if (!process.stdin.isTTY) return;
   if (options?.yes) return;

@@ -33,9 +33,9 @@ import { cloneRepo } from '../src/git.ts';
 import { wellKnownProvider, type WellKnownSkill } from '../src/providers/index.ts';
 
 const SOURCES = {
-  alpha: 'https://git.example.com/acme/alpha.git',
-  beta: 'https://git.example.com/acme/beta.git',
-  wellKnown: 'https://skills.example.com',
+  alpha: 'https://code.sdsdev.co.kr/acme/alpha.git',
+  beta: 'https://code.sdsdev.co.kr/acme/beta.git',
+  wellKnown: 'https://code.sdsdev.co.kr',
 };
 
 const wellKnownSkill: WellKnownSkill = {
@@ -84,7 +84,7 @@ describe('skills install fetches sources in parallel', () => {
             computedHash: 'x',
           },
           gamma: {
-            source: 'skills.example.com',
+            source: 'code.sdsdev.co.kr',
             sourceUrl: SOURCES.wellKnown,
             sourceType: 'well-known',
             computedHash: 'x',
@@ -136,7 +136,7 @@ describe('skills install fetches sources in parallel', () => {
 
     const lock = JSON.parse(await readFile(join(process.cwd(), 'skills-lock.json'), 'utf-8'));
     expect(lock.skills.gamma).toMatchObject({
-      source: 'skills.example.com',
+      source: 'code.sdsdev.co.kr',
       sourceUrl: SOURCES.wellKnown,
       sourceType: 'well-known',
       wellKnownDigest: expect.stringMatching(/^sha256:/),

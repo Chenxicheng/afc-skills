@@ -3,7 +3,7 @@ import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
-import { Sandbox, entries, isSymlink, readSkill, type JsonListEntry } from './sandbox.ts';
+import { Sandbox, entries, isSymlink, readSkill, type JsonListEntry } from '../sandbox.ts';
 
 /**
  * The programmatic API as a consumer sees it: `import ... from 'afc-skills'` from the
@@ -20,7 +20,7 @@ const CLONED_SKILL = 'pdf';
 const WELL_KNOWN = 'https://vercel.com';
 const WELL_KNOWN_SKILL = 'deploy-to-vercel';
 
-const repoRoot = resolve(import.meta.dirname, '..');
+const repoRoot = resolve(import.meta.dirname, '../..');
 const repoPkg = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
   version: string;
 };
