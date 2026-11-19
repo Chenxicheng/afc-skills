@@ -863,7 +863,7 @@ describe('Update Cleanup Unit Tests', () => {
       expect(p.confirm).not.toHaveBeenCalled();
       expect(remove.removeCommand).not.toHaveBeenCalled();
       expect(localLock.computeSkillFolderHash).toHaveBeenCalledWith(
-        '/tmp/repo/skills/swiftui-expert-skill'
+        join('/tmp/repo', 'skills', 'swiftui-expert-skill')
       );
       expect(fetchedParsed()).toEqual([
         expect.objectContaining({
@@ -1033,7 +1033,7 @@ describe('Update Cleanup Unit Tests', () => {
       await updateGlobalSkills({ yes: true });
 
       expect(localLock.computeSkillFolderHash).toHaveBeenCalledWith(
-        '/tmp/private-repo/skills/skill-a'
+        join('/tmp/private-repo', 'skills', 'skill-a')
       );
       expect(add.installFetched).toHaveBeenCalledTimes(installs);
     });

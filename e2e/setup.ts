@@ -6,6 +6,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import type { TestProject } from 'vitest/node';
 import { cleanEnv } from './env.ts';
+import { packInstalledPackage } from './pack-installed.ts';
 
 declare module 'vitest' {
   export interface ProvidedContext {
@@ -65,16 +66,9 @@ async function packInstalledDependencies(
     if (visited.has(dir)) return;
     visited.set(dir, pkg.version);
     for (const dependency of Object.keys(pkg.dependencies ?? {})) await visit(dependency, dir);
-    const before = new Set(await readdir(packDir));
-    sh(
-      'npm',
-      ['pack', '--offline', '--ignore-scripts', '--pack-destination', packDir, dir],
-      repoRoot,
-      env
-    );
-    const file = (await readdir(packDir)).find((f) => f.endsWith('.tgz') && !before.has(f));
-    if (!file) throw new Error(`Packing installed dependency ${name} produced no tarball`);
-    artifacts.push(join(packDir, file));
+    const file = join(packDir, `dependency-${artifacts.length}.tgz`);
+    await packInstalledPackage(dir, file);
+    artifacts.push(file);
   }
   const pkg = JSON.parse(await readFile(join(repoRoot, 'package.json'), 'utf8'));
   for (const name of Object.keys(pkg.dependencies ?? {})) await visit(name, repoRoot);
@@ -104,6 +98,7 @@ export default async function setup(project: TestProject) {
     npm_config_cache: npmCache,
     npm_config_offline: 'true',
     npm_config_ignore_scripts: 'true',
+    npm_config_update_notifier: 'false',
     COREPACK_ENABLE_NETWORK: '0',
   });
   try {
